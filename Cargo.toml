@@ -1,0 +1,21 @@
+[workspace]
+members = [
+    "crates/domain-core",
+    "crates/metadata",
+    "crates/prompt",
+    "crates/metadata-migration",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+authors = ["Tank"]
+description = "AI问答系统"
+license = "MIT"
+repository = "https://github.com/sunchangtan/aiqa.git"
+readme = "README.md"
+keywords = ["ai", "question-answering", "finance"]
+categories = ["ai", "finance"]
+publish = false

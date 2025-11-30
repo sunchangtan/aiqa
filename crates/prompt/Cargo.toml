@@ -1,0 +1,14 @@
+[package]
+name = "aiqa-prompt"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "AI问答系统的提示词处理模块"
+publish = false
+
+[dependencies]
+
+[dev-dependencies]
