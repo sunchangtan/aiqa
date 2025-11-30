@@ -11,14 +11,8 @@ use crate::domain::metadata::value_object::MetadataId;
 use crate::infrastructure::mapper::metadata_mapping;
 use crate::infrastructure::persistence::entity::metadata;
 use crate::infrastructure::persistence::entity::prelude::Metadata as MetadataEntity;
-<<<<<<< HEAD
-use crate::infrastructure::persistence::future::{repo_future, RepoFuture};
-use crate::infrastructure::persistence::query::{apply_ordering, build_condition};
-
-=======
 use crate::infrastructure::persistence::query::{apply_ordering, build_condition};
 use crate::infrastructure::repository::future::{repo_future, RepoFuture};
->>>>>>> d64570d (feat: metadata service实现)
 
 pub struct MetadataRepositoryImpl {
     db: DatabaseConnection,
