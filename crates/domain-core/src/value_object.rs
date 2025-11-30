@@ -2,8 +2,7 @@
 
 use std::fmt::Debug;
 use std::hash::Hash;
-
-use crate::prelude::DomainError;
+use crate::domain_error::DomainError;
 
 /// 所有值对象的共性：按值相等、通常不可变、无全局 ID。
 pub trait ValueObject: Clone + Eq + Hash + Debug {

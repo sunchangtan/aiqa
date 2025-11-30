@@ -1,9 +1,8 @@
 [workspace]
 members = [
     "crates/domain-core",
-    "crates/metadata",
-    "crates/prompt",
-    "crates/metadata-migration",
+    "apps/metadata",
+    "apps/metadata-migration",
 ]
 resolver = "3"
 
@@ -17,5 +16,5 @@ license = "MIT"
 repository = "https://github.com/sunchangtan/aiqa.git"
 readme = "README.md"
 keywords = ["ai", "question-answering", "finance"]
-categories = ["ai", "finance"]
+categories = ["database", "config", "finance"]
 publish = false

@@ -12,4 +12,8 @@ pub enum DomainError {
     /// 不变式 / 状态约束被违反
     #[error("invariant violation: {message}")]
     InvariantViolation { message: String },
+
+    /// 基础设施或持久化相关错误
+    #[error("persistence error: {message}")]
+    Persistence { message: String },
 }

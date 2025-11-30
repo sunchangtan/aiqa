@@ -87,6 +87,12 @@ impl Metadata {
         self.metadata_type
     }
 
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection ALL
+    //noinspection ALL
+    //noinspection ALL
     /// 修改元数据所属类别。
     /// 为保持领域语义清晰，使用语义化命名而非通用的 `set_` 前缀。
     pub fn change_metadata_type(&mut self, metadata_type: MetadataType) -> Result<(), DomainError> {
@@ -101,6 +107,12 @@ impl Metadata {
         &self.value_type
     }
 
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection ALL
+    //noinspection ALL
+    //noinspection ALL
     /// 更新值类型定义。
     pub fn change_value_type(&mut self, value_type: ValueType) -> Result<(), DomainError> {
         value_type.validate()?;
@@ -114,6 +126,12 @@ impl Metadata {
         self.capabilities
     }
 
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection ALL
+    //noinspection ALL
+    //noinspection ALL
     /// 设置所有能力开关。
     pub fn set_capabilities(
         &mut self,
@@ -156,6 +174,12 @@ impl Metadata {
         self.delete_at.is_some()
     }
 
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection ALL
+    //noinspection ALL
+    //noinspection ALL
     /// 设置软删除时间，要求晚于 `updated_at`。
     pub fn mark_deleted(&mut self, delete_at: DateTime<Utc>) -> Result<(), DomainError> {
         if delete_at < self.updated_at {
@@ -168,6 +192,10 @@ impl Metadata {
         Ok(())
     }
 
+    //noinspection Annotator
+    //noinspection Annotator
+    //noinspection ALL
+    //noinspection ALL
     /// 外部手动触碰更新时间，仍会校验单调性。
     pub fn touch(&mut self, updated_at: DateTime<Utc>) -> Result<(), DomainError> {
         self.bump_updated_at(updated_at)
