@@ -72,15 +72,43 @@ impl From<bool> for FilterValue {
 /// 单字段条件表达式。
 #[derive(Clone, Debug, PartialEq)]
 pub enum Comparison {
-    Eq { field: String, value: FilterValue },
-    Ne { field: String, value: FilterValue },
-    Gt { field: String, value: FilterValue },
-    Ge { field: String, value: FilterValue },
-    Lt { field: String, value: FilterValue },
-    Le { field: String, value: FilterValue },
-    Between { field: String, start: FilterValue, end: FilterValue },
-    In { field: String, values: Vec<FilterValue> },
-    Contains { field: String, value: FilterValue },
+    Eq {
+        field: String,
+        value: FilterValue,
+    },
+    Ne {
+        field: String,
+        value: FilterValue,
+    },
+    Gt {
+        field: String,
+        value: FilterValue,
+    },
+    Ge {
+        field: String,
+        value: FilterValue,
+    },
+    Lt {
+        field: String,
+        value: FilterValue,
+    },
+    Le {
+        field: String,
+        value: FilterValue,
+    },
+    Between {
+        field: String,
+        start: FilterValue,
+        end: FilterValue,
+    },
+    In {
+        field: String,
+        values: Vec<FilterValue>,
+    },
+    Contains {
+        field: String,
+        value: FilterValue,
+    },
 }
 
 /// 组合表达式，支持 AND / OR / NOT。
@@ -114,7 +142,7 @@ impl Expression {
     }
 
     /// 对单个表达式取逻辑非。
-    pub fn not(expr: Expression) -> Self {
+    pub fn negate(expr: Expression) -> Self {
         Expression::Not(Box::new(expr))
     }
 
@@ -253,5 +281,13 @@ pub fn between(
         field: field.into(),
         start: start.into(),
         end: end.into(),
+    }
+}
+
+impl std::ops::Not for Expression {
+    type Output = Expression;
+
+    fn not(self) -> Self::Output {
+        Expression::Not(Box::new(self))
     }
 }

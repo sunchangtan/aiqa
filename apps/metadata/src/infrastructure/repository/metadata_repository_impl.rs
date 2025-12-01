@@ -1,18 +1,23 @@
 use domain_core::domain_error::DomainError;
-use domain_core::expression::{Comparison, Expression, FilterValue, OrderBy, QueryOptions, SortDirection};
-use domain_core::pagination::{PageResult, DEFAULT_PAGE_SIZE};
+use domain_core::expression::{
+    Comparison, Expression, FilterValue, OrderBy, QueryOptions, SortDirection,
+};
+use domain_core::pagination::{DEFAULT_PAGE_SIZE, PageResult};
 use domain_core::repository::Repository;
-use sea_orm::{ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, EntityTrait, Order as SeaOrder, QueryFilter};
 use sea_orm::PaginatorTrait;
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, EntityTrait, Order as SeaOrder,
+    QueryFilter,
+};
 
-use crate::domain::metadata::metadata::Metadata;
+use crate::domain::metadata::Metadata;
 use crate::domain::metadata::repository::MetadataRepository;
 use crate::domain::metadata::value_object::MetadataId;
 use crate::infrastructure::mapper::metadata_mapping;
 use crate::infrastructure::persistence::entity::metadata;
 use crate::infrastructure::persistence::entity::prelude::Metadata as MetadataEntity;
 use crate::infrastructure::persistence::query::{apply_ordering, build_condition};
-use crate::infrastructure::repository::future::{repo_future, RepoFuture};
+use crate::infrastructure::repository::future::{RepoFuture, repo_future};
 
 pub struct MetadataRepositoryImpl {
     db: DatabaseConnection,
@@ -44,11 +49,7 @@ impl MetadataRepositoryImpl {
             | metadata::Column::IsRelationDerived => Self::cond_eq(column, value.as_bool()?),
             _ => None?,
         };
-        Some(if negate {
-            condition.not()
-        } else {
-            condition
-        })
+        Some(if negate { condition.not() } else { condition })
     }
 
     fn cond_eq<T>(column: metadata::Column, value: T) -> Condition
@@ -86,11 +87,26 @@ impl MetadataRepositoryImpl {
 }
 
 impl Repository<Metadata> for MetadataRepositoryImpl {
-    type InsertFuture<'a> = RepoFuture<'a, ()> where Self: 'a;
-    type UpdateFuture<'a> = RepoFuture<'a, ()> where Self: 'a;
-    type DeleteFuture<'a> = RepoFuture<'a, ()> where Self: 'a;
-    type FindByIdFuture<'a> = RepoFuture<'a, Option<Metadata>> where Self: 'a;
-    type QueryFuture<'a> = RepoFuture<'a, PageResult<Metadata>> where Self: 'a;
+    type InsertFuture<'a>
+        = RepoFuture<'a, ()>
+    where
+        Self: 'a;
+    type UpdateFuture<'a>
+        = RepoFuture<'a, ()>
+    where
+        Self: 'a;
+    type DeleteFuture<'a>
+        = RepoFuture<'a, ()>
+    where
+        Self: 'a;
+    type FindByIdFuture<'a>
+        = RepoFuture<'a, Option<Metadata>>
+    where
+        Self: 'a;
+    type QueryFuture<'a>
+        = RepoFuture<'a, PageResult<Metadata>>
+    where
+        Self: 'a;
 
     fn insert(&self, aggregate: Metadata) -> Self::InsertFuture<'_> {
         let db = self.db.clone();
@@ -139,11 +155,7 @@ impl Repository<Metadata> for MetadataRepositoryImpl {
         })
     }
 
-    fn query(
-        &self,
-        expr: Expression,
-        options: QueryOptions,
-    ) -> Self::QueryFuture<'_> {
+    fn query(&self, expr: Expression, options: QueryOptions) -> Self::QueryFuture<'_> {
         let db = self.db.clone();
         repo_future(async move {
             let limit = options.limit.unwrap_or(DEFAULT_PAGE_SIZE).max(1);
@@ -156,11 +168,12 @@ impl Repository<Metadata> for MetadataRepositoryImpl {
                 _ => None,
             });
             let base_query = MetadataEntity::find().filter(condition);
-            let ordered_query = apply_ordering(base_query, &options.order_bys, &Self::resolve_order);
+            let ordered_query =
+                apply_ordering(base_query, &options.order_bys, &Self::resolve_order);
 
             let paginator = ordered_query.paginate(&db, limit);
             let models = paginator
-                .fetch_page(u64::try_from(page_index).unwrap_or(0))
+                .fetch_page(page_index)
                 .await
                 .map_err(Self::map_db_err)?;
 
@@ -171,12 +184,10 @@ impl Repository<Metadata> for MetadataRepositoryImpl {
                 .map(|model| metadata_mapping::from_entity(&model))
                 .collect();
 
-            Ok(
-                PageResult::builder(items, total)
-                    .page_index(page_index)
-                    .page_size(limit)
-                    .build(),
-            )
+            Ok(PageResult::builder(items, total)
+                .page_index(page_index)
+                .page_size(limit)
+                .build())
         })
     }
 }

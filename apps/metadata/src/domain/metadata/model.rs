@@ -1,10 +1,10 @@
-use chrono::{DateTime, Utc};
-use domain_core::prelude::{AggregateRoot, DomainError, Entity};
-use serde_json::Value as JsonValue;
-use domain_core::value_object::ValueObject;
 use super::value_object::{
     MetadataCapabilities, MetadataCode, MetadataId, MetadataName, MetadataType, ValueType,
 };
+use chrono::{DateTime, Utc};
+use domain_core::prelude::{AggregateRoot, DomainError, Entity};
+use domain_core::value_object::ValueObject;
+use serde_json::Value as JsonValue;
 
 /// 元数据聚合根，表示系统中的一个元数据定义实体。
 #[derive(Debug, Clone, PartialEq, Eq)]

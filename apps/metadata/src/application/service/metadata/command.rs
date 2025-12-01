@@ -1,10 +1,6 @@
 use serde_json::Value as JsonValue;
 
-use crate::domain::metadata::value_object::{
-    MetadataCapabilities,
-    MetadataId,
-    MetadataType,
-};
+use crate::domain::metadata::value_object::{MetadataCapabilities, MetadataId, MetadataType};
 
 /// 创建命令，封装创建所需字段。
 pub struct CreateMetadataCommand {
@@ -41,18 +37,13 @@ impl Default for UpdateMetadataCommand {
 }
 
 /// 扩展字段更新策略。
+#[derive(Default)]
 pub enum ExtraUpdate {
     /// 保持现状，不修改。
+    #[default]
     Keep,
     /// 设置为给定 JSON 值。
     Set(JsonValue),
     /// 清空字段。
     Clear,
 }
-
-impl Default for ExtraUpdate {
-    fn default() -> Self {
-        ExtraUpdate::Keep
-    }
-}
-

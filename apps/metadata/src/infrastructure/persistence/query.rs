@@ -8,12 +8,12 @@ pub fn build_condition(
 ) -> Condition {
     match expr {
         Expression::Comparison(cmp) => handler(cmp).unwrap_or_else(Condition::all),
-        Expression::And(children) => children
-            .iter()
-            .fold(Condition::all(), |acc, child| acc.add(build_condition(child, handler))),
-        Expression::Or(children) => children
-            .iter()
-            .fold(Condition::any(), |acc, child| acc.add(build_condition(child, handler))),
+        Expression::And(children) => children.iter().fold(Condition::all(), |acc, child| {
+            acc.add(build_condition(child, handler))
+        }),
+        Expression::Or(children) => children.iter().fold(Condition::any(), |acc, child| {
+            acc.add(build_condition(child, handler))
+        }),
         Expression::Not(child) => build_condition(child, handler).not(),
         Expression::True => Condition::all(),
         Expression::False => Condition::all().add(Condition::any()).not(),

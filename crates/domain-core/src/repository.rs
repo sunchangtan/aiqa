@@ -49,9 +49,5 @@ where
     fn find_by_id(&self, id: A::Id) -> Self::FindByIdFuture<'_>;
 
     /// 按表达式与分页参数查询多条聚合根，返回 [`PageResult`] 承载结果及分页信息。
-    fn query(
-        &self,
-        expr: Expression,
-        options: QueryOptions,
-    ) -> Self::QueryFuture<'_>;
+    fn query(&self, expr: Expression, options: QueryOptions) -> Self::QueryFuture<'_>;
 }

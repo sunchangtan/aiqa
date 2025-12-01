@@ -8,7 +8,9 @@ pub struct MetadataQueryRequest {
 
 impl MetadataQueryRequest {
     pub fn new(expression: Expression, options: QueryOptions) -> Self {
-        Self { expression, options }
+        Self {
+            expression,
+            options,
+        }
     }
 }
-

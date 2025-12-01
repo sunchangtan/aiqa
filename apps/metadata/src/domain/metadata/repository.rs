@@ -1,6 +1,6 @@
-use domain_core::prelude::{Expression, QueryOptions, Repository};
-use super::metadata::Metadata;
+use super::model::Metadata;
 use super::value_object::MetadataId;
+use domain_core::prelude::{Expression, QueryOptions, Repository};
 
 pub trait MetadataRepository: Repository<Metadata> {
     fn insert_metadata(&self, metadata: Metadata) -> Self::InsertFuture<'_> {
@@ -23,4 +23,3 @@ pub trait MetadataRepository: Repository<Metadata> {
         self.query(expr, options)
     }
 }
-

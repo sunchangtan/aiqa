@@ -1,1 +1,1 @@
-pub mod metadata_relation;
+pub mod model;

@@ -2,12 +2,10 @@ use domain_core::domain_error::DomainError;
 use domain_core::pagination::PageResult;
 
 use crate::application::service::metadata::command::{
-    CreateMetadataCommand,
-    ExtraUpdate,
-    UpdateMetadataCommand,
+    CreateMetadataCommand, ExtraUpdate, UpdateMetadataCommand,
 };
 use crate::application::service::metadata::query::MetadataQueryRequest;
-use crate::domain::metadata::metadata::Metadata;
+use crate::domain::metadata::Metadata;
 use crate::domain::metadata::repository::MetadataRepository;
 use crate::domain::metadata::value_object::{MetadataId, MetadataName, ValueType};
 
@@ -26,10 +24,7 @@ where
         Self { repository }
     }
 
-    pub async fn create_metadata(
-        &self,
-        cmd: CreateMetadataCommand,
-    ) -> Result<(), DomainError> {
+    pub async fn create_metadata(&self, cmd: CreateMetadataCommand) -> Result<(), DomainError> {
         let mut metadata = Metadata::new(
             cmd.id,
             cmd.code,
@@ -49,10 +44,7 @@ where
         self.repository.insert_metadata(metadata).await
     }
 
-    pub async fn update_metadata(
-        &self,
-        cmd: UpdateMetadataCommand,
-    ) -> Result<(), DomainError> {
+    pub async fn update_metadata(&self, cmd: UpdateMetadataCommand) -> Result<(), DomainError> {
         let mut metadata = self
             .repository
             .find_metadata_by_id(cmd.id)
@@ -96,8 +88,7 @@ where
         &self,
         request: MetadataQueryRequest,
     ) -> Result<PageResult<Metadata>, DomainError> {
-        self
-            .repository
+        self.repository
             .query_metadata(request.expression, request.options)
             .await
     }

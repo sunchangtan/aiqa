@@ -3,7 +3,7 @@ use sea_orm_migration::{
     schema::*,
 };
 
-use crate::{metadata_type::MetadataType};
+use crate::metadata_type::MetadataType;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;

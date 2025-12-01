@@ -1,8 +1,8 @@
 //! 值对象 (Value Object) 抽象，强调不可共享的属性组合。
 
+use crate::domain_error::DomainError;
 use std::fmt::Debug;
 use std::hash::Hash;
-use crate::domain_error::DomainError;
 
 /// 所有值对象的共性：按值相等、通常不可变、无全局 ID。
 pub trait ValueObject: Clone + Eq + Hash + Debug {

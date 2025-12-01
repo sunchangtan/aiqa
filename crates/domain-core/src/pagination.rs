@@ -25,7 +25,7 @@ where
         if page_size == 0 {
             return 0;
         }
-        (self.total_count() + page_size - 1) / page_size
+        self.total_count().div_ceil(page_size)
     }
 
     /// 是否存在上一页（HasPreviousPage）。

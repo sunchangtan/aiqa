@@ -6,7 +6,7 @@ fn combine_and_or_not() {
         Expression::cmp(eq("status", "active")),
         Expression::or(vec![
             Expression::cmp(gt("score", 80)),
-            Expression::not(Expression::cmp(le("score", 30))),
+            Expression::negate(Expression::cmp(le("score", 30))),
         ]),
     ]);
     match expr {
@@ -30,4 +30,3 @@ fn between_and_sort_options() {
     assert_eq!(opts.order_bys.len(), 1);
     assert_eq!(opts.order_bys[0].direction, SortDirection::Desc);
 }
-

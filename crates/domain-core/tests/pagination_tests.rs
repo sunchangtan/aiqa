@@ -1,4 +1,4 @@
-use domain_core::pagination::{Page, PageResult, DEFAULT_PAGE_SIZE};
+use domain_core::pagination::{DEFAULT_PAGE_SIZE, Page, PageResult};
 
 #[test]
 fn page_has_more_logic() {

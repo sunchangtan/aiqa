@@ -1,15 +1,12 @@
 use chrono::{FixedOffset, Utc};
 use sea_orm::ActiveValue::Set;
 
-use crate::domain::metadata::metadata::Metadata;
+use crate::domain::metadata::Metadata;
 use crate::domain::metadata::value_object::{
-    MetadataCapabilities, MetadataId, MetadataName, MetadataType,
-    MetadataCode, ValueType as DomainValueType,
+    MetadataCapabilities, MetadataCode, MetadataId, MetadataName, MetadataType,
+    ValueType as DomainValueType,
 };
-use crate::infrastructure::persistence::entity::{
-    metadata,
-    sea_orm_active_enums,
-};
+use crate::infrastructure::persistence::entity::{metadata, sea_orm_active_enums};
 
 fn to_domain_metadata_type(db_ty: sea_orm_active_enums::MetadataType) -> MetadataType {
     match db_ty {
@@ -30,17 +27,21 @@ fn to_db_metadata_type(dom_ty: MetadataType) -> sea_orm_active_enums::MetadataTy
 pub fn from_entity(model: &metadata::Model) -> Metadata {
     // 基础字段
     let id = MetadataId::from(model.id);
-    let code = MetadataCode::new(model.code.clone())
-        .expect("invalid code from persistence");
-    let name = MetadataName::new(model.name.clone())
-        .expect("invalid name from persistence");
+    let code = MetadataCode::new(model.code.clone()).expect("invalid code from persistence");
+    let name = MetadataName::new(model.name.clone()).expect("invalid name from persistence");
     let metadata_type = to_domain_metadata_type(model.metadata_type.clone());
     let value_type = DomainValueType::new(model.value_type.clone())
         .expect("invalid value_type from persistence");
 
     // 使用领域构造函数创建聚合（时间戳将以当前时间初始化）。
-    let mut agg = Metadata::new(id, code.into_inner(), name.into_inner(), metadata_type, value_type.into_inner())
-        .expect("failed to construct domain metadata from persistence");
+    let mut agg = Metadata::new(
+        id,
+        code.into_inner(),
+        name.into_inner(),
+        metadata_type,
+        value_type.into_inner(),
+    )
+    .expect("failed to construct domain metadata from persistence");
 
     // 能力位
     let caps = MetadataCapabilities::new(
@@ -50,7 +51,8 @@ pub fn from_entity(model: &metadata::Model) -> Metadata {
         model.is_groupable,
         model.is_relation_derived,
     );
-    agg.set_capabilities(caps).expect("set capabilities should not fail");
+    agg.set_capabilities(caps)
+        .expect("set capabilities should not fail");
 
     // 扩展 JSON
     let extra = model.extra.clone();

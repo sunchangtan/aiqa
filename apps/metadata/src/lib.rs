@@ -1,18 +1,15 @@
 use sea_orm::{Database, DatabaseConnection};
 
 pub use application::service::metadata::{
-    CreateMetadataCommand,
-    ExtraUpdate,
-    MetadataQueryRequest,
-    MetadataService,
+    CreateMetadataCommand, ExtraUpdate, MetadataQueryRequest, MetadataService,
     UpdateMetadataCommand,
 };
 
 use infrastructure::repository::metadata_repository_impl::MetadataRepositoryImpl;
 
+mod application;
 mod domain;
 mod infrastructure;
-mod application;
 
 /// 根据数据库连接字符串构建 `MetadataService`，内部会创建 SeaORM 连接。
 pub async fn metadata_service_from_url(
