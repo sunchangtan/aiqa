@@ -1,4 +1,5 @@
 pub mod aggregate_root;
+pub mod audit;
 pub mod domain_error;
 pub mod entity;
 pub mod expression;

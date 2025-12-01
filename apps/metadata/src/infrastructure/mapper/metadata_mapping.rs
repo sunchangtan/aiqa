@@ -1,12 +1,13 @@
 use chrono::{FixedOffset, Utc};
 use sea_orm::ActiveValue::Set;
 
-use crate::domain::metadata::Metadata;
 use crate::domain::metadata::value_object::{
     MetadataCapabilities, MetadataCode, MetadataId, MetadataName, MetadataType,
     ValueType as DomainValueType,
 };
+use crate::domain::metadata::{Metadata, MetadataReconstructParams};
 use crate::infrastructure::persistence::entity::{metadata, sea_orm_active_enums};
+use domain_core::prelude::Audit;
 
 fn to_domain_metadata_type(db_ty: sea_orm_active_enums::MetadataType) -> MetadataType {
     match db_ty {
@@ -33,42 +34,29 @@ pub fn from_entity(model: &metadata::Model) -> Metadata {
     let value_type = DomainValueType::new(model.value_type.clone())
         .expect("invalid value_type from persistence");
 
-    // 使用领域构造函数创建聚合（时间戳将以当前时间初始化）。
-    let mut agg = Metadata::new(
+    // 使用持久化快照重建聚合。
+    Metadata::reconstruct(MetadataReconstructParams {
         id,
-        code.into_inner(),
-        name.into_inner(),
+        code: code.into_inner(),
+        name: name.into_inner(),
         metadata_type,
-        value_type.into_inner(),
-    )
-    .expect("failed to construct domain metadata from persistence");
-
-    // 能力位
-    let caps = MetadataCapabilities::new(
-        model.is_chainable,
-        model.is_filterable,
-        model.is_sortable,
-        model.is_groupable,
-        model.is_relation_derived,
-    );
-    agg.set_capabilities(caps)
-        .expect("set capabilities should not fail");
-
-    // 扩展 JSON
-    let extra = model.extra.clone();
-    agg.set_extra(extra).expect("set extra should not fail");
-
-    // 注意：由于领域对象当前不支持回写较早的时间戳，这里不回放 created_at/updated_at/delete_at。
-    // 回放 updated_at 和 delete_at：尽量与持久化对齐。
-    let persisted_updated = model.updated_at.with_timezone(&Utc);
-    let _ = agg.touch(persisted_updated);
-    if let Some(del) = model.delete_at {
-        let _ = agg.mark_deleted(del.with_timezone(&Utc));
-    }
-
-    // 如需严格对齐 created_at，也可在领域层提供 from_persistence 构造函数后再完善。
-
-    agg
+        value_type: value_type.into_inner(),
+        capabilities: MetadataCapabilities::new(
+            model.is_chainable,
+            model.is_filterable,
+            model.is_sortable,
+            model.is_groupable,
+            model.is_relation_derived,
+        ),
+        extra: model.extra.clone(),
+        audit: Audit::reconstruct(
+            model.created_at.with_timezone(&Utc),
+            model.updated_at.with_timezone(&Utc),
+            model.delete_at.map(|d| d.with_timezone(&Utc)),
+        )
+        .expect("invalid audit timeline"),
+    })
+    .expect("failed to construct domain metadata from persistence")
 }
 
 pub fn to_active_model(user: &Metadata) -> metadata::ActiveModel {

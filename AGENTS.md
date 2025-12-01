@@ -32,3 +32,9 @@
 ## Security & Configuration Tips
 - Keep secrets (DB URLs, credentials) in `.env` or local config; never commit them.
 - Verify migration targets before running destructive commands (`down`, `reset`, `fresh`); prefer applying to local/dev databases first.
+
+## Additional DDD & Documentation Requirements
+- All design and code changes should align with the existing DDD layering (domain/application/infrastructure); keep domain logic in domain layer, transport/persistence in application/infrastructure.
+- Public-facing APIs/types should carry rustdoc comments with runnable doctest examples (`#[ignore]` not allowed); keep doc samples minimal but compilable with current deps.
+- For any app, treat generated ORM entities under `apps/*/src/infrastructure/persistence/entity` as codegen output—do not edit them manually.
+- After making changes, run `./scripts/quick_check.sh` to validate format, lint, tests, and docs.

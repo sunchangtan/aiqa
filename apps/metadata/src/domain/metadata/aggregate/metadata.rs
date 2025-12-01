@@ -1,12 +1,32 @@
-use super::value_object::{
+use crate::domain::metadata::value_object::{
     MetadataCapabilities, MetadataCode, MetadataId, MetadataName, MetadataType, ValueType,
 };
 use chrono::{DateTime, Utc};
-use domain_core::prelude::{AggregateRoot, DomainError, Entity};
+use domain_core::prelude::{AggregateRoot, Audit, DomainError, Entity};
 use domain_core::value_object::ValueObject;
 use serde_json::Value as JsonValue;
 
 /// 元数据聚合根，表示系统中的一个元数据定义实体。
+///
+/// # 示例
+/// 创建并更新元数据：
+/// ```
+/// # use domain_core::domain_error::DomainError;
+/// use metadata::{Metadata, MetadataId, MetadataType, ValueType};
+///
+/// # fn main() -> Result<(), DomainError> {
+/// let mut metadata = Metadata::new(
+///     MetadataId::new(1),
+///     "code",
+///     "name",
+///     MetadataType::Attribute,
+///     "string",
+/// )?;
+/// metadata.change_value_type(ValueType::new("int")?)?;
+/// metadata.mark_deleted(metadata.updated_at())?;
+/// assert!(metadata.is_deleted());
+/// # Ok(()) }
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Metadata {
     /// 元数据标识。
@@ -23,12 +43,8 @@ pub struct Metadata {
     capabilities: MetadataCapabilities,
     /// 额外的 JSON 扩展信息。
     extra: Option<JsonValue>,
-    /// 创建时间。
-    created_at: DateTime<Utc>,
-    /// 最近一次更新时间。
-    updated_at: DateTime<Utc>,
-    /// 软删除时间，存在即表示已删除。
-    delete_at: Option<DateTime<Utc>>,
+    /// 时间线审计信息。
+    audit: Audit,
 }
 
 impl Metadata {
@@ -40,22 +56,44 @@ impl Metadata {
         metadata_type: MetadataType,
         value_type: impl Into<String>,
     ) -> Result<Self, DomainError> {
-        let code = MetadataCode::new(code)?;
-        let name = MetadataName::new(name)?;
-        let value_type = ValueType::new(value_type)?;
         let now = Utc::now();
-
-        Ok(Self {
+        Self::reconstruct(MetadataReconstructParams {
             id: id.into(),
+            code: code.into(),
+            name: name.into(),
+            metadata_type,
+            value_type: value_type.into(),
+            capabilities: MetadataCapabilities::default(),
+            extra: None,
+            audit: Audit::new(now),
+        })
+    }
+
+    /// 按字段与审计信息重建元数据聚合，保留时间戳与可选删除标记。
+    pub fn reconstruct(params: MetadataReconstructParams) -> Result<Self, DomainError> {
+        let MetadataReconstructParams {
+            id,
             code,
             name,
             metadata_type,
             value_type,
-            capabilities: MetadataCapabilities::default(),
-            extra: None,
-            created_at: now,
-            updated_at: now,
-            delete_at: None,
+            capabilities,
+            extra,
+            audit,
+        } = params;
+        let code = MetadataCode::new(code)?;
+        let name = MetadataName::new(name)?;
+        let value_type = ValueType::new(value_type)?;
+
+        Ok(Self {
+            id,
+            code,
+            name,
+            metadata_type,
+            value_type,
+            capabilities,
+            extra,
+            audit,
         })
     }
 
@@ -87,12 +125,6 @@ impl Metadata {
         self.metadata_type
     }
 
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection ALL
-    //noinspection ALL
-    //noinspection ALL
     /// 修改元数据所属类别。
     /// 为保持领域语义清晰，使用语义化命名而非通用的 `set_` 前缀。
     pub fn change_metadata_type(&mut self, metadata_type: MetadataType) -> Result<(), DomainError> {
@@ -107,12 +139,6 @@ impl Metadata {
         &self.value_type
     }
 
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection ALL
-    //noinspection ALL
-    //noinspection ALL
     /// 更新值类型定义。
     pub fn change_value_type(&mut self, value_type: ValueType) -> Result<(), DomainError> {
         value_type.validate()?;
@@ -126,12 +152,6 @@ impl Metadata {
         self.capabilities
     }
 
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection ALL
-    //noinspection ALL
-    //noinspection ALL
     /// 设置所有能力开关。
     pub fn set_capabilities(
         &mut self,
@@ -156,46 +176,29 @@ impl Metadata {
 
     /// 返回创建时间（UTC）。
     pub fn created_at(&self) -> DateTime<Utc> {
-        self.created_at
+        self.audit.created_at()
     }
 
     /// 返回最近一次更新时间（UTC）。
     pub fn updated_at(&self) -> DateTime<Utc> {
-        self.updated_at
+        self.audit.updated_at()
     }
 
     /// 返回软删除时间，没有删除则为 `None`。
     pub fn delete_at(&self) -> Option<DateTime<Utc>> {
-        self.delete_at
+        self.audit.delete_at()
     }
 
     /// 判断当前是否已经软删除。
     pub fn is_deleted(&self) -> bool {
-        self.delete_at.is_some()
+        self.audit.is_deleted()
     }
 
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection ALL
-    //noinspection ALL
-    //noinspection ALL
     /// 设置软删除时间，要求晚于 `updated_at`。
     pub fn mark_deleted(&mut self, delete_at: DateTime<Utc>) -> Result<(), DomainError> {
-        if delete_at < self.updated_at {
-            return Err(DomainError::InvariantViolation {
-                message: "delete_at must be greater than or equal to updated_at".into(),
-            });
-        }
-
-        self.delete_at = Some(delete_at);
-        Ok(())
+        self.audit.mark_deleted(delete_at)
     }
 
-    //noinspection Annotator
-    //noinspection Annotator
-    //noinspection ALL
-    //noinspection ALL
     /// 外部手动触碰更新时间，仍会校验单调性。
     pub fn touch(&mut self, updated_at: DateTime<Utc>) -> Result<(), DomainError> {
         self.bump_updated_at(updated_at)
@@ -203,14 +206,7 @@ impl Metadata {
 
     /// 内部通用的更新时间写入逻辑，保证不回退。
     fn bump_updated_at(&mut self, updated_at: DateTime<Utc>) -> Result<(), DomainError> {
-        if updated_at < self.updated_at {
-            return Err(DomainError::InvariantViolation {
-                message: "updated_at cannot move backwards".into(),
-            });
-        }
-
-        self.updated_at = updated_at;
-        Ok(())
+        self.audit.bump_updated(updated_at)
     }
 }
 
@@ -222,6 +218,19 @@ impl Entity for Metadata {
     }
 }
 impl AggregateRoot for Metadata {}
+
+/// 重建元数据聚合所需的字段集合。
+#[derive(Debug, Clone)]
+pub struct MetadataReconstructParams {
+    pub id: MetadataId,
+    pub code: String,
+    pub name: String,
+    pub metadata_type: MetadataType,
+    pub value_type: String,
+    pub capabilities: MetadataCapabilities,
+    pub extra: Option<JsonValue>,
+    pub audit: Audit,
+}
 
 #[cfg(test)]
 mod tests {

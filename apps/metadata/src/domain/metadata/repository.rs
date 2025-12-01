@@ -1,4 +1,4 @@
-use super::model::Metadata;
+use super::Metadata;
 use super::value_object::MetadataId;
 use domain_core::prelude::{Expression, QueryOptions, Repository};
 

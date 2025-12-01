@@ -9,6 +9,79 @@ use crate::domain::metadata::Metadata;
 use crate::domain::metadata::repository::MetadataRepository;
 use crate::domain::metadata::value_object::{MetadataId, MetadataName, ValueType};
 
+/// 元数据的应用服务，负责协调命令与查询。
+///
+/// # 示例
+/// ```
+/// use metadata::{
+///     CreateMetadataCommand, ExtraUpdate, MetadataId, MetadataRepository, MetadataService,
+///     MetadataType, MetadataQueryRequest,
+/// };
+/// use domain_core::expression::{Expression, QueryOptions};
+/// use domain_core::pagination::PageResult;
+/// use domain_core::domain_error::DomainError;
+/// use std::future::{ready, Ready, Future};
+/// use std::pin::Pin;
+/// use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+///
+/// struct InMemoryRepo;
+/// impl MetadataRepository for InMemoryRepo {}
+///
+/// impl domain_core::repository::Repository<metadata::Metadata> for InMemoryRepo {
+///     type InsertFuture<'a> = Ready<Result<(), DomainError>> where Self: 'a;
+///     type UpdateFuture<'a> = Ready<Result<(), DomainError>> where Self: 'a;
+///     type DeleteFuture<'a> = Ready<Result<(), DomainError>> where Self: 'a;
+///     type FindByIdFuture<'a> = Ready<Result<Option<metadata::Metadata>, DomainError>> where Self: 'a;
+///     type QueryFuture<'a> = Ready<Result<PageResult<metadata::Metadata>, DomainError>> where Self: 'a;
+///
+///     fn insert(&self, _aggregate: metadata::Metadata) -> Self::InsertFuture<'_> { ready(Ok(())) }
+///     fn update(&self, _aggregate: metadata::Metadata) -> Self::UpdateFuture<'_> { ready(Ok(())) }
+///     fn delete(&self, _id: MetadataId) -> Self::DeleteFuture<'_> { ready(Ok(())) }
+///     fn find_by_id(&self, _id: MetadataId) -> Self::FindByIdFuture<'_> { ready(Ok(None)) }
+///     fn query(&self, _expr: Expression, _options: QueryOptions) -> Self::QueryFuture<'_> {
+///         ready(Ok(PageResult::empty(None, 0, None)))
+///     }
+/// }
+///
+/// async fn demo() -> Result<(), DomainError> {
+///     let repo = InMemoryRepo;
+///     let service = MetadataService::new(repo);
+///     service.create_metadata(CreateMetadataCommand {
+///         id: MetadataId::new(1),
+///         code: "code".into(),
+///         name: "name".into(),
+///         metadata_type: MetadataType::Attribute,
+///         value_type: "string".into(),
+///         capabilities: None,
+///         extra: None,
+///     }).await?;
+///
+///     let _ = service.query_metadata(MetadataQueryRequest {
+///         expression: Expression::True,
+///         options: QueryOptions::default(),
+///     }).await?;
+///     Ok(())
+/// }
+///
+/// fn block_on<F: Future>(mut fut: F) -> F::Output {
+///     fn dummy_raw_waker() -> RawWaker {
+///         fn no_op(_: *const ()) {}
+///         fn clone(_: *const ()) -> RawWaker { dummy_raw_waker() }
+///         let vtable = &RawWakerVTable::new(clone, no_op, no_op, no_op);
+///         RawWaker::new(std::ptr::null(), vtable)
+///     }
+///     let waker = unsafe { Waker::from_raw(dummy_raw_waker()) };
+///     let mut cx = Context::from_waker(&waker);
+///     // SAFETY: 文档示例中 Future 仅使用一次。
+///     let mut fut = unsafe { Pin::new_unchecked(&mut fut) };
+///     match fut.as_mut().poll(&mut cx) {
+///         Poll::Ready(val) => val,
+///         Poll::Pending => panic!("demo future should complete immediately"),
+///     }
+/// }
+///
+/// # block_on(demo()).unwrap();
+/// ```
 pub struct MetadataService<R>
 where
     R: MetadataRepository,

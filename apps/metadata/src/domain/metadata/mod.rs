@@ -1,4 +1,4 @@
-pub mod model;
+pub mod aggregate;
 pub mod repository;
 pub mod value_object;
-pub use model::Metadata;
+pub use aggregate::{Metadata, MetadataReconstructParams};
