@@ -20,8 +20,8 @@ use crate::domain::metadata_relation::value_object::{MetadataRelationId, validat
 /// )?;
 /// relation.relink(MetadataId::new(12), MetadataId::new(13))?;
 ///
-/// assert_eq!(relation.from_id().value(), 12);
-/// assert_eq!(relation.to_id().value(), 13);
+/// assert_eq!(relation.source_id().value(), 12);
+/// assert_eq!(relation.target_id().value(), 13);
 /// # Ok(()) }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -89,12 +89,12 @@ impl MetadataRelation {
     }
 
     /// 起点元数据标识。
-    pub fn from_id(&self) -> MetadataId {
+    pub fn source_id(&self) -> MetadataId {
         self.from_metadata_id
     }
 
     /// 终点元数据标识。
-    pub fn to_id(&self) -> MetadataId {
+    pub fn target_id(&self) -> MetadataId {
         self.to_metadata_id
     }
 
@@ -179,8 +179,8 @@ mod tests {
         )
         .expect("valid relation");
 
-        assert_eq!(relation.from_id(), MetadataId::new(10));
-        assert_eq!(relation.to_id(), MetadataId::new(11));
+        assert_eq!(relation.source_id(), MetadataId::new(10));
+        assert_eq!(relation.target_id(), MetadataId::new(11));
         assert!(!relation.is_deleted());
 
         let err = MetadataRelation::new(

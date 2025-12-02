@@ -1,6 +1,6 @@
 //! 值对象 (Value Object) 抽象，强调不可共享的属性组合。
 
-use crate::domain_error::DomainError;
+use crate::error::domain_error::DomainError;
 use std::fmt::Debug;
 use std::hash::Hash;
 

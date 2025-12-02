@@ -1,8 +1,9 @@
-use crate::aggregate_root::AggregateRoot;
-use crate::domain_error::DomainError;
-use crate::expression::{Expression, QueryOptions};
-use crate::pagination::PageResult;
 use std::future::Future;
+
+use super::aggregate_root::AggregateRoot;
+use crate::error::domain_error::DomainError;
+use crate::shared::expression::{Expression, QueryOptions};
+use crate::shared::pagination::PageResult;
 
 /// 通用仓储接口，抽象聚合根的持久化读写与查询能力。
 pub trait Repository<A>: Send + Sync

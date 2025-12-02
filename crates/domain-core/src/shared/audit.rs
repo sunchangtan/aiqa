@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 
-use crate::domain_error::DomainError;
+use crate::error::domain_error::DomainError;
 
 /// 通用的审计时间信息，封装创建、更新时间以及软删除校验。
 ///

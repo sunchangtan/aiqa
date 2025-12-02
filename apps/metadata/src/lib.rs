@@ -19,8 +19,8 @@ pub use domain::metadata_relation::value_object::MetadataRelationId;
 pub use domain::metadata_relation::value_object::validate_relation_id;
 pub use domain_core::prelude::Audit;
 
-pub use infrastructure::repository::metadata_relation_repository_impl::MetadataRelationRepositoryImpl;
-use infrastructure::repository::metadata_repository_impl::MetadataRepositoryImpl;
+pub use infrastructure::persistence::repository::metadata_relation_repository_impl::MetadataRelationRepositoryImpl;
+use infrastructure::persistence::repository::metadata_repository_impl::MetadataRepositoryImpl;
 
 mod application;
 mod domain;

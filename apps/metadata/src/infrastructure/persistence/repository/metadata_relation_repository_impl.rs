@@ -1,23 +1,24 @@
 use domain_core::domain_error::DomainError;
-use domain_core::expression::{
-    Comparison, Expression, FilterValue, OrderBy, QueryOptions, SortDirection,
-};
+use domain_core::expression::{Expression, FilterValue, OrderBy, QueryOptions};
 use domain_core::pagination::{DEFAULT_PAGE_SIZE, PageResult};
 use domain_core::repository::Repository;
-use sea_orm::PaginatorTrait;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, EntityTrait, Order as SeaOrder,
-    QueryFilter,
+    PaginatorTrait, QueryFilter,
 };
 
 use crate::domain::metadata_relation::MetadataRelation;
 use crate::domain::metadata_relation::repository::MetadataRelationRepository;
 use crate::domain::metadata_relation::value_object::MetadataRelationId;
-use crate::infrastructure::mapper::metadata_relation_mapping;
 use crate::infrastructure::persistence::entity::metadata_relation;
 use crate::infrastructure::persistence::entity::prelude::MetadataRelation as MetadataRelationEntity;
-use crate::infrastructure::persistence::query::{apply_ordering, build_condition};
-use crate::infrastructure::repository::future::{RepoFuture, repo_future};
+use crate::infrastructure::persistence::mapper::{
+    ActiveModelMapper, EntityMapper, metadata_relation_mapping::MetadataRelationMapper,
+};
+use crate::infrastructure::persistence::query::{
+    PaginationParams, apply_ordering, build_eq_ne_condition, resolve_order_direction,
+};
+use crate::infrastructure::persistence::repository::future::{RepoFuture, repo_future};
 
 /// SeaORM 实现的元数据关系仓储。
 pub struct MetadataRelationRepositoryImpl {
@@ -55,13 +56,8 @@ impl MetadataRelationRepositoryImpl {
     }
 
     fn resolve_order(order: &OrderBy) -> Option<(metadata_relation::Column, SeaOrder)> {
-        Self::column_for(&order.field).map(|column| {
-            let dir = match order.direction {
-                SortDirection::Asc => SeaOrder::Asc,
-                SortDirection::Desc => SeaOrder::Desc,
-            };
-            (column, dir)
-        })
+        Self::column_for(&order.field)
+            .map(|column| (column, resolve_order_direction(&order.direction)))
     }
 
     fn column_for(field: &str) -> Option<metadata_relation::Column> {
@@ -102,7 +98,7 @@ impl Repository<MetadataRelation> for MetadataRelationRepositoryImpl {
     fn insert(&self, aggregate: MetadataRelation) -> Self::InsertFuture<'_> {
         let db = self.db.clone();
         repo_future(async move {
-            let active = metadata_relation_mapping::to_active_model(&aggregate);
+            let active = MetadataRelationMapper::map_to_active_model(&aggregate)?;
             MetadataRelationEntity::insert(active)
                 .exec(&db)
                 .await
@@ -114,7 +110,7 @@ impl Repository<MetadataRelation> for MetadataRelationRepositoryImpl {
     fn update(&self, aggregate: MetadataRelation) -> Self::UpdateFuture<'_> {
         let db = self.db.clone();
         repo_future(async move {
-            let active = metadata_relation_mapping::to_active_model(&aggregate);
+            let active = MetadataRelationMapper::map_to_active_model(&aggregate)?;
             active
                 .update(&db)
                 .await
@@ -142,42 +138,41 @@ impl Repository<MetadataRelation> for MetadataRelationRepositoryImpl {
                 .one(&db)
                 .await
                 .map_err(Self::map_db_err)?;
-            Ok(model.map(|m| metadata_relation_mapping::from_entity(&m)))
+            model
+                .map(|m| MetadataRelationMapper::map_to_domain(&m))
+                .transpose()
         })
     }
 
     fn query(&self, expr: Expression, options: QueryOptions) -> Self::QueryFuture<'_> {
         let db = self.db.clone();
         repo_future(async move {
-            let limit = options.limit.unwrap_or(DEFAULT_PAGE_SIZE).max(1);
-            let offset = options.offset.unwrap_or(0);
-            let page_index = if limit == 0 { 0 } else { offset / limit };
+            let pagination =
+                PaginationParams::compute(options.limit, options.offset, DEFAULT_PAGE_SIZE);
 
-            let condition = build_condition(&expr, &|cmp| match cmp {
-                Comparison::Eq { field, value } => Self::field_condition(field, value, false),
-                Comparison::Ne { field, value } => Self::field_condition(field, value, true),
-                _ => None,
+            let condition = build_eq_ne_condition(&expr, &|field, value, neg| {
+                Self::field_condition(field, value, neg)
             });
             let base_query = MetadataRelationEntity::find().filter(condition);
             let ordered_query =
                 apply_ordering(base_query, &options.order_bys, &Self::resolve_order);
 
-            let paginator = ordered_query.paginate(&db, limit);
+            let paginator = ordered_query.paginate(&db, pagination.limit);
             let models = paginator
-                .fetch_page(page_index)
+                .fetch_page(pagination.page_index)
                 .await
                 .map_err(Self::map_db_err)?;
 
             let total = paginator.num_items().await.map_err(Self::map_db_err)?;
 
             let items = models
-                .into_iter()
-                .map(|model| metadata_relation_mapping::from_entity(&model))
-                .collect();
+                .iter()
+                .map(MetadataRelationMapper::map_to_domain)
+                .collect::<Result<Vec<_>, _>>()?;
 
             Ok(PageResult::builder(items, total)
-                .page_index(page_index)
-                .page_size(limit)
+                .page_index(pagination.page_index)
+                .page_size(pagination.limit)
                 .build())
         })
     }
