@@ -1,0 +1,50 @@
+{
+  "session_id": "uuid",
+  "questions": [
+    {
+      "question_id": "uuid1",
+      "timestamp": "2024-10-01T12:00:00Z",
+      "content": "上海市国企 PE/VC 事件",
+      "intent": "query",
+      "rewritten_content": "查询上海市国有企业发生的 PE/VC 投融资事件",
+      "ir": {
+        "natural_ir": {
+          "steps": [
+            {
+              "id": "step1",
+              "action": "query",
+              "outputs": [
+                {
+                  "biz_name": "PE/VC事件",
+                  "biz_type": "event",
+                  "entity": "企业"
+                }
+              ],
+              "filters": [
+                {
+                  "biz_name": "企业地区",
+                  "biz_type": "attribute",
+                  "op": "eq",
+                  "value": "上海市"
+                },
+                {
+                  "biz_name": "企业性质",
+                  "biz_type": "attribute",
+                  "op": "eq",
+                  "value": "国企"
+                },
+                {
+                  "biz_name": "事件类型",
+                  "biz_type": "attribute",
+                  "op": "in",
+                  "value": ["PE", "VC"]
+                }
+              ]
+            }
+          ],
+          "final_steps": ["step1"]
+        }
+      }
+    }
+  ]
+}

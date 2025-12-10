@@ -9,6 +9,15 @@ pub struct MetadataRelationQueryRequest {
 
 impl MetadataRelationQueryRequest {
     /// 创建一个新的查询请求。
+    ///
+    /// # Examples
+    /// ```
+    /// use domain_core::expression::{Expression, QueryOptions};
+    /// use metadata::MetadataRelationQueryRequest;
+    ///
+    /// let req = MetadataRelationQueryRequest::new(Expression::True, QueryOptions::default());
+    /// assert!(matches!(req.expression, Expression::True));
+    /// ```
     pub fn new(expression: Expression, options: QueryOptions) -> Self {
         Self {
             expression,

@@ -2,18 +2,22 @@ use serde_json::Value as JsonValue;
 
 use crate::domain::metadata::value_object::{MetadataCapabilities, MetadataId, MetadataType};
 
-/// 创建命令，封装创建所需字段。
-pub struct CreateMetadataCommand {
-    pub id: MetadataId,
-    pub code: String,
-    pub name: String,
-    pub metadata_type: MetadataType,
-    pub value_type: String,
-    pub capabilities: Option<MetadataCapabilities>,
-    pub extra: Option<JsonValue>,
-}
-
 /// 更新命令，包含可选的增量字段。
+///
+/// # Examples
+/// ```
+/// use metadata::{ExtraUpdate, MetadataId, MetadataType, UpdateMetadataCommand};
+///
+/// let cmd = UpdateMetadataCommand {
+///     id: MetadataId::new(1),
+///     name: Some("new name".into()),
+///     metadata_type: Some(MetadataType::Entity),
+///     value_type: Some("string".into()),
+///     capabilities: None,
+///     extra: ExtraUpdate::Clear,
+/// };
+/// assert!(matches!(cmd.extra, ExtraUpdate::Clear));
+/// ```
 pub struct UpdateMetadataCommand {
     pub id: MetadataId,
     pub name: Option<String>,

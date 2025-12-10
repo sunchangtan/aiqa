@@ -1,0 +1,5 @@
+pub mod create_metadata_relation_command;
+pub mod relink_metadata_relation_command;
+
+pub use create_metadata_relation_command::CreateMetadataRelationCommand;
+pub use relink_metadata_relation_command::RelinkMetadataRelationCommand;
