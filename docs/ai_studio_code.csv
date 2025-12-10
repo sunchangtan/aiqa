@@ -1,7 +1,7 @@
 code,name,description,node_type,owner_code,data_class,value_type,unit,is_identifier
-company,公司,公司实体，表示一个工商注册企业主体,entity,,dimension,object,,FALSE
+company,公司,公司实体，表示一个工商注册企业主体,entity,,group,object,,FALSE
 company.id,公司ID,公司在当前数据源中的内部唯一标识字段,field,company,dimension,string,,TRUE
-company.base,基本档案,公司工商基本信息集合，包含名称、成立时间、资本、地址等字段,field,company,dimension,object,,FALSE
+company.base,基本档案,公司工商基本信息集合，包含名称、成立时间、资本、地址等字段,field,company,group,object,,FALSE
 company.base.name_cn,公司名称,公司法定注册中文名称，用于唯一识别企业中文全称,field,company.base,dimension,string,,FALSE
 company.base.name_abbr,公司简称,公司常用简称或品牌简称，用于日常称呼,field,company.base,dimension,string,,FALSE
 company.base.name_en,英文名称,公司在工商或公开信息中的英文名称,field,company.base,dimension,string,,FALSE
