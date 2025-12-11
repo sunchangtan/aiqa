@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use utoipa::ToSchema;
 
-/// 更新 BizMetadata 的请求体。
+/// 更新 BizMetadata 的请求体，未赋值的字段保持不变。
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdateBizMetadataRequest {
     /// 可选名称。

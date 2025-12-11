@@ -1,3 +1,5 @@
+//! AI 元数据 HTTP 入口的处理器集合，负责将 REST 请求转为应用服务调用。
+//! 使用统一的 `ResultResponse<T>` 包装，便于 AI/前端消费和 OpenAPI 生成。
 use axum::{
     Json,
     extract::{Path, Query, State},
@@ -26,6 +28,7 @@ use super::state::AppState;
     ),
     tag = "biz_metadata"
 )]
+/// 创建元数据，返回创建结果并在 `Location` 头中指向新资源。
 pub async fn create_biz_metadata(
     State(state): State<AppState>,
     Json(payload): Json<CreateBizMetadataRequest>,
@@ -72,6 +75,7 @@ pub async fn create_biz_metadata(
     ),
     tag = "biz_metadata"
 )]
+/// 更新指定 ID 的元数据，仅应用被赋值的字段，并返回最新状态。
 pub async fn update_biz_metadata(
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -102,6 +106,7 @@ pub async fn update_biz_metadata(
     ),
     tag = "biz_metadata"
 )]
+/// 查询指定 ID 的元数据，不存在时返回 404。
 pub async fn get_biz_metadata(
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -130,6 +135,7 @@ pub async fn get_biz_metadata(
     ),
     tag = "biz_metadata"
 )]
+/// 删除指定 ID 的元数据，成功时返回 204 无内容。
 pub async fn delete_biz_metadata(
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -154,6 +160,7 @@ pub async fn delete_biz_metadata(
     ),
     tag = "biz_metadata"
 )]
+/// 按分页与可选过滤条件查询元数据列表，返回分页结果。
 pub async fn list_biz_metadata(
     State(state): State<AppState>,
     Query(params): Query<BizMetadataListParams>,
