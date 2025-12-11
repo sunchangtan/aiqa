@@ -1,6 +1,7 @@
 use crate::application::service::biz_metadata::BizMetadataService;
 use crate::infrastructure::persistence::repository::biz_metadata_repository_impl::BizMetadataRepositoryImpl;
-use axum::Router;
+use axum::{Router, http::Method};
+use tower_http::cors::{Any, CorsLayer};
 use utoipa::Modify;
 
 const BIZ_METADATA_BASE: &str = "/biz_metadata";
@@ -37,8 +38,13 @@ pub fn build_router(service: BizMetadataService<BizMetadataRepositoryImpl>) -> R
 
     let api = build_generated_router(state);
     let openapi = ApiDoc::openapi();
+    let cors = CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_origin(Any)
+        .allow_headers(Any);
 
     Router::new()
         .merge(SwaggerUi::new("/docs").url("/openapi.json", openapi))
         .nest(BIZ_METADATA_BASE, api)
+        .layer(cors)
 }
