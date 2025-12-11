@@ -1,35 +1,35 @@
 code,name,description,node_type,owner_code,data_class,value_type,unit,is_identifier
-company,¹«Ë¾,¹«Ë¾ÊµÌå£¬±íÊ¾Ò»¸ö¹¤ÉÌ×¢²áÆóÒµÖ÷Ìå,entity,,group,object,,FALSE
-company.id,¹«Ë¾ID,¹«Ë¾ÔÚµ±Ç°Êı¾İÔ´ÖĞµÄÄÚ²¿Î¨Ò»±êÊ¶×Ö¶Î,field,company,dimension,string,,TRUE
-company.base,»ù±¾µµ°¸,¹«Ë¾¹¤ÉÌ»ù±¾ĞÅÏ¢¼¯ºÏ£¬°üº¬Ãû³Æ¡¢³ÉÁ¢Ê±¼ä¡¢×Ê±¾¡¢µØÖ·µÈ×Ö¶Î,field,company,group,object,,FALSE
-company.base.name_cn,¹«Ë¾Ãû³Æ,¹«Ë¾·¨¶¨×¢²áÖĞÎÄÃû³Æ£¬ÓÃÓÚÎ¨Ò»Ê¶±ğÆóÒµÖĞÎÄÈ«³Æ,field,company.base,dimension,string,,FALSE
-company.base.name_abbr,¹«Ë¾¼ò³Æ,¹«Ë¾³£ÓÃ¼ò³Æ»òÆ·ÅÆ¼ò³Æ£¬ÓÃÓÚÈÕ³£³Æºô,field,company.base,dimension,string,,FALSE
-company.base.name_en,Ó¢ÎÄÃû³Æ,¹«Ë¾ÔÚ¹¤ÉÌ»ò¹«¿ªĞÅÏ¢ÖĞµÄÓ¢ÎÄÃû³Æ,field,company.base,dimension,string,,FALSE
-company.base.name_hist,ÔøÓÃÃû,¹«Ë¾ÀúÊ·Ãû³ÆÁĞ±í£¬¼ÇÂ¼ÆóÒµÃû³Æ±ä¸üÇé¿ö,field,company.base,text,list<string>,,FALSE
-company.base.uscc,Í³Ò»Éç»áĞÅÓÃ´úÂë,¹«Ë¾Í³Ò»Éç»áĞÅÓÃ´úÂë£¬¹ú¼ÒÍ³Ò»°ä·¢µÄÆóÒµÎ¨Ò»Ê¶±ğºÅ,field,company.base,dimension,string,,TRUE
-company.base.reg_no,¹¤ÉÌ×¢²áºÅ,¹«Ë¾¹¤ÉÌ×¢²áºÅ£¬²¿·ÖÆóÒµÑØÓÃ¾É×¢²áºÅ×Ö¶Î,field,company.base,dimension,string,,TRUE
-company.base.org_code,×éÖ¯»ú¹¹´úÂë,¹«Ë¾×éÖ¯»ú¹¹´úÂë£¬ÓÃÓÚ±êÊ¶ÆóÊÂÒµµ¥Î»×éÖ¯Éí·İ,field,company.base,dimension,string,,TRUE
-company.base.tax_id,ÄÉË°ÈËÊ¶±ğºÅ,¹«Ë¾ÄÉË°ÈËÊ¶±ğºÅ£¬ÓÃÓÚË°ÎñµÇ¼ÇºÍ±¨Ë°,field,company.base,dimension,string,,TRUE
-company.base.legal_rep,·¨¶¨´ú±íÈË,¹«Ë¾·¨¶¨´ú±íÈËĞÕÃû£¬Ò»°ãÎªÆóÒµ·¨ÈË»ò¸ºÔğÈË,field,company.base,dimension,string,,FALSE
-company.base.est_dt,³ÉÁ¢ÈÕÆÚ,¹«Ë¾³ÉÁ¢ÈÕÆÚ»ò×¢²áÈÕÆÚ£¬¶ÔÓ¦ÓªÒµÖ´ÕÕÉÏµÄ³ÉÁ¢Ê±¼ä,field,company.base,dimension,date,,FALSE
-company.base.op_term_start_dt,ÓªÒµÆÚÏŞ¿ªÊ¼,¹«Ë¾ÓªÒµÆÚÏŞÆğÊ¼ÈÕÆÚ£¬±êÊ¶¾­Óª¿ªÊ¼Ê±¼ä,field,company.base,dimension,date,,FALSE
-company.base.op_term_end_dt,ÓªÒµÆÚÏŞ½áÊø,¹«Ë¾ÓªÒµÆÚÏŞ½áÊøÈÕÆÚ£¬³¤ÆÚ¾­ÓªÆóÒµ¿ÉÄÜÎª¿Õ,field,company.base,dimension,date,,FALSE
-company.base.approval_dt,ºË×¼ÈÕÆÚ,¹¤ÉÌ²¿ÃÅ×î½üÒ»´ÎºË×¼»ò±ä¸üµÇ¼ÇÈÕÆÚ,field,company.base,dimension,date,,FALSE
-company.base.revoke_dt,µõÏúÈÕÆÚ,¹«Ë¾ÓªÒµÖ´ÕÕ±»µõÏúµÄÈÕÆÚ,field,company.base,dimension,date,,FALSE
-company.base.cancel_dt,×¢ÏúÈÕÆÚ,¹«Ë¾°ìÀí¹¤ÉÌ×¢ÏúµÇ¼ÇÍê³ÉµÄÈÕÆÚ,field,company.base,dimension,date,,FALSE
-company.base.reg_status,ÆóÒµ×´Ì¬,¹«Ë¾µ±Ç°¹¤ÉÌ×´Ì¬£¬ÈçÔÚÓª¡¢´æĞø¡¢µõÏú¡¢×¢ÏúµÈ,field,company.base,dimension,string,,FALSE
-company.base.reg_cap_amt,×¢²á×Ê±¾,¹«Ë¾×¢²á×Ê±¾½ğ¶îÊıÖµ£¬°´µÇ¼Ç×Ê±¾×Ü¶î¼ÆÁ¿,field,company.base,metric,decimal,CNY,FALSE
-company.base.reg_cap_ccy,×¢²á±ÒÖÖ,×¢²á×Ê±¾¶ÔÓ¦µÄ»õ±Ò±ÒÖÖ£¬ÈçÈËÃñ±Ò¡¢ÃÀÔªµÈ,field,company.base,dimension,string,,FALSE
-company.base.reg_cap_unit,×Ê½ğµ¥Î»,×¢²á×Ê±¾½ğ¶îËùÊ¹ÓÃµÄÊıÁ¿µ¥Î»£¬ÈçÔª¡¢ÍòÔªµÈ,field,company.base,dimension,string,,FALSE
-company.base.reg_auth,µÇ¼Ç»ú¹Ø,Îª¹«Ë¾°ìÀí¹¤ÉÌµÇ¼ÇµÄµÇ¼Ç»ú¹ØÃû³Æ,field,company.base,dimension,string,,FALSE
-company.base.biz_scope,¾­Óª·¶Î§,¹«Ë¾¾­¹¤ÉÌºË×¼µÄ¾­Óª·¶Î§ÎÄ±¾ÃèÊö,field,company.base,text,string,,FALSE
-company.base.biz_hist_desc,¹«Ë¾ÑØ¸ï,¹«Ë¾·¢Õ¹ÑØ¸ï¡¢ÀúÊ·±ä¸üºÍÖØÒªÊÂ¼şµÄÎÄ×ÖËµÃ÷,field,company.base,text,string,,FALSE
-company.base.addr_reg,×¢²áµØÖ·,¹«Ë¾¹¤ÉÌµÇ¼ÇÖĞµÄ×¢²áµØÖ·»ò×¡ËùµØ,field,company.base,text,string,,FALSE
-company.base.addr_office,°ì¹«µØÖ·,¹«Ë¾Êµ¼Ê°ì¹«µØÖ·»ò¾­Óª³¡ËùµØÖ·,field,company.base,text,string,,FALSE
-company.base.addr_mail,Í¨ĞÅµØÖ·,¹«Ë¾½ÓÊÕĞÅº¯¡¢ÓÊ¼Ä×ÊÁÏµÄÍ¨ĞÅµØÖ·,field,company.base,text,string,,FALSE
-company.base.contact_tel,ÆóÒµµç»°,¹«Ë¾¶ÔÍâ¹«¿ªµÄÁªÏµµç»°»ò×Ü»úµç»°,field,company.base,dimension,string,,FALSE
-company.base.contact_email,ÆóÒµÓÊÏä,¹«Ë¾¶ÔÍâ¹«¿ªµÄÁªÏµµç×ÓÓÊÏäµØÖ·,field,company.base,dimension,string,,FALSE
-company.base.website_url,ÆóÒµÍøÖ·,¹«Ë¾¹Ù·½ÍøÕ¾»òÖ÷Òª¶ÔÍâÍøÕ¾µØÖ·,field,company.base,dimension,string,,FALSE
-company.base.zip_code,ÓÊÕş±àÂë,¹«Ë¾ËùÔÚµØÇøÓÊÕş±àÂë£¬ÓÃÓÚÓÊ¼ş¼ÄËÍ,field,company.base,dimension,int,,FALSE
-company.base.staff_num_desc,´ÓÒµÈËÊı,¹«Ë¾´ÓÒµÈËÔ±ÊıÁ¿µÄÎÄ×ÖÃèÊö£¬¿ÉÄÜÎªÈËÊı»òÇø¼ä,field,company.base,dimension,string,,FALSE
-company.base.insur_num_desc,²Î±£ÈËÊı,¹«Ë¾²Î¼ÓÉç»á±£ÏÕÈËÊıµÄÎÄ×ÖÃèÊö£¬¿ÉÄÜÎªÈËÊı»òÇø¼ä,field,company.base,dimension,string,,FALSE
+company,å…¬å¸,å…¬å¸å®ä½“ï¼Œè¡¨ç¤ºä¸€ä¸ªå·¥å•†æ³¨å†Œä¼ä¸šä¸»ä½“,entity,,group,object,,FALSE
+company.id,å…¬å¸ID,å…¬å¸åœ¨å½“å‰æ•°æ®æºä¸­çš„å†…éƒ¨å”¯ä¸€æ ‡è¯†å­—æ®µ,field,company,dimension,string,,TRUE
+company.base,åŸºæœ¬æ¡£æ¡ˆ,å…¬å¸å·¥å•†åŸºæœ¬ä¿¡æ¯é›†åˆï¼ŒåŒ…å«åç§°ã€æˆç«‹æ—¶é—´ã€èµ„æœ¬ã€åœ°å€ç­‰å­—æ®µ,field,company,group,object,,FALSE
+company.base.name_cn,å…¬å¸åç§°,å…¬å¸æ³•å®šæ³¨å†Œä¸­æ–‡åç§°ï¼Œç”¨äºå”¯ä¸€è¯†åˆ«ä¼ä¸šä¸­æ–‡å…¨ç§°,field,company.base,dimension,string,,FALSE
+company.base.name_abbr,å…¬å¸ç®€ç§°,å…¬å¸å¸¸ç”¨ç®€ç§°æˆ–å“ç‰Œç®€ç§°ï¼Œç”¨äºæ—¥å¸¸ç§°å‘¼,field,company.base,dimension,string,,FALSE
+company.base.name_en,è‹±æ–‡åç§°,å…¬å¸åœ¨å·¥å•†æˆ–å…¬å¼€ä¿¡æ¯ä¸­çš„è‹±æ–‡åç§°,field,company.base,dimension,string,,FALSE
+company.base.name_hist,æ›¾ç”¨å,å…¬å¸å†å²åç§°åˆ—è¡¨ï¼Œè®°å½•ä¼ä¸šåç§°å˜æ›´æƒ…å†µ,field,company.base,text,list<string>,,FALSE
+company.base.uscc,ç»Ÿä¸€ç¤¾ä¼šä¿¡ç”¨ä»£ç ,å…¬å¸ç»Ÿä¸€ç¤¾ä¼šä¿¡ç”¨ä»£ç ï¼Œå›½å®¶ç»Ÿä¸€é¢å‘çš„ä¼ä¸šå”¯ä¸€è¯†åˆ«å·,field,company.base,dimension,string,,TRUE
+company.base.reg_no,å·¥å•†æ³¨å†Œå·,å…¬å¸å·¥å•†æ³¨å†Œå·ï¼Œéƒ¨åˆ†ä¼ä¸šæ²¿ç”¨æ—§æ³¨å†Œå·å­—æ®µ,field,company.base,dimension,string,,TRUE
+company.base.org_code,ç»„ç»‡æœºæ„ä»£ç ,å…¬å¸ç»„ç»‡æœºæ„ä»£ç ï¼Œç”¨äºæ ‡è¯†ä¼äº‹ä¸šå•ä½ç»„ç»‡èº«ä»½,field,company.base,dimension,string,,TRUE
+company.base.tax_id,çº³ç¨äººè¯†åˆ«å·,å…¬å¸çº³ç¨äººè¯†åˆ«å·ï¼Œç”¨äºç¨åŠ¡ç™»è®°å’ŒæŠ¥ç¨,field,company.base,dimension,string,,TRUE
+company.base.legal_rep,æ³•å®šä»£è¡¨äºº,å…¬å¸æ³•å®šä»£è¡¨äººå§“åï¼Œä¸€èˆ¬ä¸ºä¼ä¸šæ³•äººæˆ–è´Ÿè´£äºº,field,company.base,dimension,string,,FALSE
+company.base.est_dt,æˆç«‹æ—¥æœŸ,å…¬å¸æˆç«‹æ—¥æœŸæˆ–æ³¨å†Œæ—¥æœŸï¼Œå¯¹åº”è¥ä¸šæ‰§ç…§ä¸Šçš„æˆç«‹æ—¶é—´,field,company.base,dimension,date,,FALSE
+company.base.op_term_start_dt,è¥ä¸šæœŸé™å¼€å§‹,å…¬å¸è¥ä¸šæœŸé™èµ·å§‹æ—¥æœŸï¼Œæ ‡è¯†ç»è¥å¼€å§‹æ—¶é—´,field,company.base,dimension,date,,FALSE
+company.base.op_term_end_dt,è¥ä¸šæœŸé™ç»“æŸ,å…¬å¸è¥ä¸šæœŸé™ç»“æŸæ—¥æœŸï¼Œé•¿æœŸç»è¥ä¼ä¸šå¯èƒ½ä¸ºç©º,field,company.base,dimension,date,,FALSE
+company.base.approval_dt,æ ¸å‡†æ—¥æœŸ,å·¥å•†éƒ¨é—¨æœ€è¿‘ä¸€æ¬¡æ ¸å‡†æˆ–å˜æ›´ç™»è®°æ—¥æœŸ,field,company.base,dimension,date,,FALSE
+company.base.revoke_dt,åŠé”€æ—¥æœŸ,å…¬å¸è¥ä¸šæ‰§ç…§è¢«åŠé”€çš„æ—¥æœŸ,field,company.base,dimension,date,,FALSE
+company.base.cancel_dt,æ³¨é”€æ—¥æœŸ,å…¬å¸åŠç†å·¥å•†æ³¨é”€ç™»è®°å®Œæˆçš„æ—¥æœŸ,field,company.base,dimension,date,,FALSE
+company.base.reg_status,ä¼ä¸šçŠ¶æ€,å…¬å¸å½“å‰å·¥å•†çŠ¶æ€ï¼Œå¦‚åœ¨è¥ã€å­˜ç»­ã€åŠé”€ã€æ³¨é”€ç­‰,field,company.base,dimension,string,,FALSE
+company.base.reg_cap_amt,æ³¨å†Œèµ„æœ¬,å…¬å¸æ³¨å†Œèµ„æœ¬é‡‘é¢æ•°å€¼ï¼ŒæŒ‰ç™»è®°èµ„æœ¬æ€»é¢è®¡é‡,field,company.base,metric,decimal,CNY,FALSE
+company.base.reg_cap_ccy,æ³¨å†Œå¸ç§,æ³¨å†Œèµ„æœ¬å¯¹åº”çš„è´§å¸å¸ç§ï¼Œå¦‚äººæ°‘å¸ã€ç¾å…ƒç­‰,field,company.base,dimension,string,,FALSE
+company.base.reg_cap_unit,èµ„é‡‘å•ä½,æ³¨å†Œèµ„æœ¬é‡‘é¢æ‰€ä½¿ç”¨çš„æ•°é‡å•ä½ï¼Œå¦‚å…ƒã€ä¸‡å…ƒç­‰,field,company.base,dimension,string,,FALSE
+company.base.reg_auth,ç™»è®°æœºå…³,ä¸ºå…¬å¸åŠç†å·¥å•†ç™»è®°çš„ç™»è®°æœºå…³åç§°,field,company.base,dimension,string,,FALSE
+company.base.biz_scope,ç»è¥èŒƒå›´,å…¬å¸ç»å·¥å•†æ ¸å‡†çš„ç»è¥èŒƒå›´æ–‡æœ¬æè¿°,field,company.base,text,string,,FALSE
+company.base.biz_hist_desc,å…¬å¸æ²¿é©,å…¬å¸å‘å±•æ²¿é©ã€å†å²å˜æ›´å’Œé‡è¦äº‹ä»¶çš„æ–‡å­—è¯´æ˜,field,company.base,text,string,,FALSE
+company.base.addr_reg,æ³¨å†Œåœ°å€,å…¬å¸å·¥å•†ç™»è®°ä¸­çš„æ³¨å†Œåœ°å€æˆ–ä½æ‰€åœ°,field,company.base,text,string,,FALSE
+company.base.addr_office,åŠå…¬åœ°å€,å…¬å¸å®é™…åŠå…¬åœ°å€æˆ–ç»è¥åœºæ‰€åœ°å€,field,company.base,text,string,,FALSE
+company.base.addr_mail,é€šä¿¡åœ°å€,å…¬å¸æ¥æ”¶ä¿¡å‡½ã€é‚®å¯„èµ„æ–™çš„é€šä¿¡åœ°å€,field,company.base,text,string,,FALSE
+company.base.contact_tel,ä¼ä¸šç”µè¯,å…¬å¸å¯¹å¤–å…¬å¼€çš„è”ç³»ç”µè¯æˆ–æ€»æœºç”µè¯,field,company.base,dimension,string,,FALSE
+company.base.contact_email,ä¼ä¸šé‚®ç®±,å…¬å¸å¯¹å¤–å…¬å¼€çš„è”ç³»ç”µå­é‚®ç®±åœ°å€,field,company.base,dimension,string,,FALSE
+company.base.website_url,ä¼ä¸šç½‘å€,å…¬å¸å®˜æ–¹ç½‘ç«™æˆ–ä¸»è¦å¯¹å¤–ç½‘ç«™åœ°å€,field,company.base,dimension,string,,FALSE
+company.base.zip_code,é‚®æ”¿ç¼–ç ,å…¬å¸æ‰€åœ¨åœ°åŒºé‚®æ”¿ç¼–ç ï¼Œç”¨äºé‚®ä»¶å¯„é€,field,company.base,dimension,int,,FALSE
+company.base.staff_num_desc,ä»ä¸šäººæ•°,å…¬å¸ä»ä¸šäººå‘˜æ•°é‡çš„æ–‡å­—æè¿°ï¼Œå¯èƒ½ä¸ºäººæ•°æˆ–åŒºé—´,field,company.base,dimension,string,,FALSE
+company.base.insur_num_desc,å‚ä¿äººæ•°,å…¬å¸å‚åŠ ç¤¾ä¼šä¿é™©äººæ•°çš„æ–‡å­—æè¿°ï¼Œå¯èƒ½ä¸ºäººæ•°æˆ–åŒºé—´,field,company.base,dimension,string,,FALSE

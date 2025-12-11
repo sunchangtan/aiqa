@@ -33,7 +33,7 @@
 
 你接收到的输入为一个 JSON 对象（该 JSON 仅供你理解，不需要原样输出）：
 
-```json
+```text
 {
   "session_id": "sess_001",
   "history": [

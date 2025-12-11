@@ -1,0 +1,142 @@
+use chrono::{FixedOffset, Utc};
+use sea_orm::ActiveValue::{NotSet, Set};
+
+use crate::domain::biz_metadata::value_object::{
+    BizMetadataCode, BizMetadataId, BizMetadataName, BizMetadataStatus, BizMetadataType, DataClass,
+    Unit, ValueType as DomainValueType,
+};
+use crate::domain::biz_metadata::{BizMetadata, MetadataSnapshot};
+use crate::infrastructure::persistence::entity::biz_metadata;
+use crate::infrastructure::persistence::mapper::{ActiveModelMapper, EntityMapper};
+use domain_core::prelude::{Audit, DomainError};
+
+fn to_domain_biz_metadata_type(db_ty: &str) -> BizMetadataType {
+    match db_ty {
+        "entity" => BizMetadataType::Entity,
+        "event" => BizMetadataType::Event,
+        // 兼容 schema 的 field / relation 映射到 Attribute
+        "field" | "relation" => BizMetadataType::Attribute,
+        _ => BizMetadataType::Attribute,
+    }
+}
+
+fn to_db_biz_metadata_type(dom_ty: BizMetadataType) -> String {
+    match dom_ty {
+        BizMetadataType::Attribute => "field".to_string(),
+        BizMetadataType::Entity => "entity".to_string(),
+        BizMetadataType::Event => "event".to_string(),
+    }
+}
+
+/// Metadata 的持久化与领域映射器。
+pub struct BizMetadataMapper;
+
+impl BizMetadataMapper {
+    /// 仅将变更字段写入 ActiveModel，未变字段保持 `Unchanged/NotSet`。
+    pub fn apply_changes(
+        aggregate: &BizMetadata,
+        active: &mut biz_metadata::ActiveModel,
+    ) -> Result<(), DomainError> {
+        let tz = FixedOffset::east_opt(0).expect("UTC offset");
+
+        active.id = Set(i64::from(aggregate.id()));
+        active.code = Set(aggregate.code().as_str().to_string());
+        active.name = Set(aggregate.name().as_str().to_string());
+        active.description = Set(aggregate.description().map(|d| d.to_string()));
+        active.meta_type = Set(to_db_biz_metadata_type(aggregate.metadata_type()));
+        active.owner_id = Set(aggregate.owner_id().map(i64::from));
+        active.data_class = Set(aggregate.data_class().as_str().to_string());
+        active.value_type = Set(Some(aggregate.value_type().as_str().to_string()));
+        active.unit = Set(aggregate.unit().map(|u| u.as_str().to_string()));
+        active.is_identifier = Set(aggregate.is_identifier());
+        active.status = Set(aggregate.status().as_str().to_string());
+        active.created_at = Set(aggregate.created_at().with_timezone(&tz));
+        // updated_at 留给 DB 触发器自动更新，避免覆盖。
+        active.updated_at = NotSet;
+        active.deleted_at = Set(aggregate.delete_at().map(|d| d.with_timezone(&tz)));
+
+        Ok(())
+    }
+}
+
+impl EntityMapper<biz_metadata::Model, BizMetadata> for BizMetadataMapper {
+    fn map_to_domain(model: &biz_metadata::Model) -> Result<BizMetadata, DomainError> {
+        let id = BizMetadataId::from(model.id);
+        let code =
+            BizMetadataCode::new(model.code.clone()).map_err(|e| DomainError::Validation {
+                message: e.to_string(),
+            })?;
+        let name =
+            BizMetadataName::new(model.name.clone()).map_err(|e| DomainError::Validation {
+                message: e.to_string(),
+            })?;
+        let metadata_type = to_domain_biz_metadata_type(&model.meta_type);
+        let data_class =
+            DataClass::new(&model.data_class).map_err(|e| DomainError::Validation {
+                message: e.to_string(),
+            })?;
+        let status =
+            BizMetadataStatus::new(&model.status).map_err(|e| DomainError::Validation {
+                message: e.to_string(),
+            })?;
+        let value_type = DomainValueType::new(
+            model
+                .value_type
+                .clone()
+                .unwrap_or_else(|| "string".to_string()),
+        )
+        .map_err(|e| DomainError::Validation {
+            message: e.to_string(),
+        })?;
+        let unit = model
+            .unit
+            .as_ref()
+            .map(|u| Unit::new(u.clone()))
+            .transpose()
+            .map_err(|e| DomainError::Validation {
+                message: e.to_string(),
+            })?;
+
+        BizMetadata::from_snapshot(MetadataSnapshot {
+            id,
+            code: code.into_inner(),
+            name: name.into_inner(),
+            description: model.description.clone(),
+            metadata_type,
+            owner_id: model.owner_id.map(BizMetadataId::from),
+            data_class,
+            value_type: value_type.into_inner(),
+            unit,
+            is_identifier: model.is_identifier,
+            status,
+            audit: Audit::reconstruct(
+                model.created_at.with_timezone(&Utc),
+                model.updated_at.with_timezone(&Utc),
+                model.deleted_at.map(|d| d.with_timezone(&Utc)),
+            )?,
+        })
+    }
+}
+
+impl ActiveModelMapper<BizMetadata, biz_metadata::ActiveModel> for BizMetadataMapper {
+    fn map_to_active_model(user: &BizMetadata) -> Result<biz_metadata::ActiveModel, DomainError> {
+        let tz = FixedOffset::east_opt(0).expect("UTC offset");
+
+        Ok(biz_metadata::ActiveModel {
+            id: Set(i64::from(user.id())),
+            code: Set(user.code().as_str().to_string()),
+            name: Set(user.name().as_str().to_string()),
+            description: Set(user.description().map(|d| d.to_string())),
+            meta_type: Set(to_db_biz_metadata_type(user.metadata_type())),
+            owner_id: Set(user.owner_id().map(i64::from)),
+            data_class: Set(user.data_class().as_str().to_string()),
+            value_type: Set(Some(user.value_type().as_str().to_string())),
+            unit: Set(user.unit().map(|u| u.as_str().to_string())),
+            is_identifier: Set(user.is_identifier()),
+            status: Set(user.status().as_str().to_string()),
+            created_at: Set(user.created_at().with_timezone(&tz)),
+            updated_at: Set(user.updated_at().with_timezone(&tz)),
+            deleted_at: Set(user.delete_at().map(|d| d.with_timezone(&tz))),
+        })
+    }
+}

@@ -1,0 +1,34 @@
+use sea_orm::{Database, DatabaseConnection};
+
+pub use application::service::biz_metadata::{
+    BizMetadataQueryRequest, BizMetadataService, CreateBizMetadataCommand, FieldUpdate,
+    UpdateBizMetadataCommand,
+};
+pub use domain::biz_metadata::BizMetadata;
+pub use domain::biz_metadata::repository::BizMetadataRepository;
+pub use domain::biz_metadata::value_object::{
+    BizMetadataId, BizMetadataStatus, BizMetadataType, DataClass, ValueType,
+};
+pub use domain_core::prelude::Audit;
+
+use infrastructure::persistence::repository::biz_metadata_repository_impl::BizMetadataRepositoryImpl;
+
+mod application;
+mod domain;
+mod infrastructure;
+
+/// 根据数据库连接字符串构建 `MetadataService`，内部会创建 SeaORM 连接。
+pub async fn metadata_service_from_url(
+    url: &str,
+) -> Result<BizMetadataService<BizMetadataRepositoryImpl>, sea_orm::DbErr> {
+    let db = Database::connect(url).await?;
+    Ok(metadata_service_from_connection(db))
+}
+
+/// 使用已有的 `DatabaseConnection` 构建 `MetadataService`，便于复用连接池。
+pub fn metadata_service_from_connection(
+    db: DatabaseConnection,
+) -> BizMetadataService<BizMetadataRepositoryImpl> {
+    let repository = BizMetadataRepositoryImpl::new(db);
+    BizMetadataService::new(repository)
+}

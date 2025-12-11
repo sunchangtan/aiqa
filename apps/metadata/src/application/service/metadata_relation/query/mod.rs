@@ -1,3 +1,0 @@
-pub mod metadata_relation_query_request;
-
-pub use metadata_relation_query_request::MetadataRelationQueryRequest;

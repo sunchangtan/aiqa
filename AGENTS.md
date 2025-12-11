@@ -1,22 +1,22 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Workspace root uses Cargo with members `crates/domain-core`, `apps/metadata`, and `apps/metadata-migration`; built artifacts land in `target/`.
+- Workspace root uses Cargo with members `crates/domain-core`, `apps/biz-metadata`, and `apps/biz-metadata-migration`; built artifacts land in `target/`.
 - `crates/domain-core`: shared domain primitives such as `aggregate_root`, `repository`, and pagination helpers; tests live in `crates/domain-core/tests`.
-- `apps/metadata`: metadata domain implementation with layers under `src/domain`, `src/application`, and `src/infrastructure` (SeaORM entities and mappers).
-- `apps/metadata-migration`: SeaORM migration binary and library; migration files live under `src/m20YYMMDD_*`.
+- `apps/biz-metadata`: BizMetadata domain implementation with layers under `src/domain`, `src/application`, and `src/infrastructure` (SeaORM entities and mappers).
+- `apps/biz-metadata-migration`: SeaORM migration binary and library; migration files live under `src/m20YYMMDD_*`.
 
 ## Build, Test, and Development Commands
 - `cargo check` — fast type/build validation for the full workspace.
 - `cargo fmt` — format all Rust code (run before commits).
 - `cargo clippy --all-targets -- -D warnings` — lint with warnings treated as errors.
 - `cargo test` or `cargo test -p domain-core` — run unit tests (currently concentrated in `domain-core`).
-- Migrations (run inside `apps/metadata-migration`): `cargo run -- up` to apply pending migrations, `cargo run -- down` to roll back the last batch, `cargo run -- status` to inspect state, `cargo run -- generate <name>` to scaffold a new migration.
+- Migrations (run inside `apps/biz-metadata-migration`): `cargo run -- up` to apply pending migrations, `cargo run -- down` to roll back the last batch, `cargo run -- status` to inspect state, `cargo run -- generate <name>` to scaffold a new migration.
 
 ## Coding Style & Naming Conventions
 - Rust 2024 edition; use standard rustfmt defaults (4-space indent, trailing commas where allowed).
 - Modules and files: `snake_case`; types and traits: `PascalCase`; functions and vars: `snake_case`; constants: `SCREAMING_SNAKE_CASE`.
-- Keep domain boundaries clear: shared abstractions in `domain-core`, app-specific logic in `apps/metadata`; prefer returning `DomainError` variants from domain services.
+- Keep domain boundaries clear: shared abstractions in `domain-core`, app-specific logic in `apps/biz-metadata`; prefer returning `DomainError` variants from domain services.
 - Place SeaORM-facing structs under `infrastructure` and isolate mapping in `infrastructure/mapper`.
 
 ## Testing Guidelines

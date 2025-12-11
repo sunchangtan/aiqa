@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "crates/domain-core",
-    "apps/metadata",
-    "apps/metadata-migration",
+  "crates/domain-core",
+  "apps/biz-metadata",
+  "apps/biz-metadata-migration",
 ]
 resolver = "3"
 
