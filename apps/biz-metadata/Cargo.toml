@@ -9,6 +9,14 @@ repository.workspace = true
 description = "AI问答系统的元数据模块"
 publish = false
 
+[[bin]]
+name = "biz-metadata"
+path = "src/main.rs"
+
+[lib]
+name = "biz_metadata"
+path = "src/lib.rs"
+
 [dependencies]
 chrono = { version = "0.4", default-features = true }
 domain-core = { path = "../../crates/domain-core" }
