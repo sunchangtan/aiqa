@@ -28,14 +28,14 @@ use crate::domain::biz_metadata::value_object::{BizMetadataId, BizMetadataName, 
 /// impl BizMetadataRepository for InMemoryRepo {}
 ///
 /// impl domain_core::repository::Repository<biz_metadata::BizMetadata> for InMemoryRepo {
-///     type InsertFuture<'a> = Ready<Result<(), DomainError>> where Self: 'a;
-///     type UpdateFuture<'a> = Ready<Result<(), DomainError>> where Self: 'a;
+///     type InsertFuture<'a> = Ready<Result<biz_metadata::BizMetadata, DomainError>> where Self: 'a;
+///     type UpdateFuture<'a> = Ready<Result<biz_metadata::BizMetadata, DomainError>> where Self: 'a;
 ///     type DeleteFuture<'a> = Ready<Result<(), DomainError>> where Self: 'a;
 ///     type FindByIdFuture<'a> = Ready<Result<Option<biz_metadata::BizMetadata>, DomainError>> where Self: 'a;
 ///     type QueryFuture<'a> = Ready<Result<PageResult<biz_metadata::BizMetadata>, DomainError>> where Self: 'a;
 ///
-///     fn insert(&self, _aggregate: biz_metadata::BizMetadata) -> Self::InsertFuture<'_> { ready(Ok(())) }
-///     fn update(&self, _aggregate: biz_metadata::BizMetadata) -> Self::UpdateFuture<'_> { ready(Ok(())) }
+///     fn insert(&self, aggregate: biz_metadata::BizMetadata) -> Self::InsertFuture<'_> { ready(Ok(aggregate)) }
+///     fn update(&self, aggregate: biz_metadata::BizMetadata) -> Self::UpdateFuture<'_> { ready(Ok(aggregate)) }
 ///     fn delete(&self, _id: BizMetadataId) -> Self::DeleteFuture<'_> { ready(Ok(())) }
 ///     fn find_by_id(&self, _id: BizMetadataId) -> Self::FindByIdFuture<'_> { ready(Ok(None)) }
 ///     fn query(&self, _expr: Expression, _options: QueryOptions) -> Self::QueryFuture<'_> {
@@ -46,8 +46,7 @@ use crate::domain::biz_metadata::value_object::{BizMetadataId, BizMetadataName, 
 /// async fn demo() -> Result<(), DomainError> {
 ///     let repo = InMemoryRepo;
 ///     let service = BizMetadataService::new(repo);
-///     service.create_biz_metadata(CreateBizMetadataCommand {
-///         id: BizMetadataId::new(1),
+///     let created = service.create_biz_metadata(CreateBizMetadataCommand {
 ///         code: "code".into(),
 ///         name: "name".into(),
 ///         description: None,
@@ -59,6 +58,7 @@ use crate::domain::biz_metadata::value_object::{BizMetadataId, BizMetadataName, 
 ///         is_identifier: false,
 ///         status: None,
 ///     }).await?;
+///     assert_eq!(created.code().as_str(), "code");
 ///
 ///     let _ = service.query_biz_metadata(BizMetadataQueryRequest {
 ///         expression: Expression::True,
@@ -104,9 +104,8 @@ where
     pub async fn create_biz_metadata(
         &self,
         cmd: CreateBizMetadataCommand,
-    ) -> Result<(), DomainError> {
+    ) -> Result<BizMetadata, DomainError> {
         let mut biz_metadata = BizMetadata::new(
-            cmd.id,
             cmd.code,
             cmd.name,
             cmd.metadata_type,
@@ -129,7 +128,7 @@ where
     pub async fn update_biz_metadata(
         &self,
         cmd: UpdateBizMetadataCommand,
-    ) -> Result<(), DomainError> {
+    ) -> Result<BizMetadata, DomainError> {
         let mut biz_metadata = self
             .repository
             .find_biz_metadata_by_id(cmd.id)
@@ -200,5 +199,13 @@ where
 
     pub fn repository(&self) -> &R {
         &self.repository
+    }
+
+    /// 便捷查询：按 ID 查找。
+    pub async fn find_biz_metadata_by_id(
+        &self,
+        id: BizMetadataId,
+    ) -> Result<Option<BizMetadata>, DomainError> {
+        self.repository.find_biz_metadata_by_id(id).await
     }
 }

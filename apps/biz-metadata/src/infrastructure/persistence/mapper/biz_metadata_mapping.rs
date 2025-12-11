@@ -121,9 +121,11 @@ impl EntityMapper<biz_metadata::Model, BizMetadata> for BizMetadataMapper {
 impl ActiveModelMapper<BizMetadata, biz_metadata::ActiveModel> for BizMetadataMapper {
     fn map_to_active_model(user: &BizMetadata) -> Result<biz_metadata::ActiveModel, DomainError> {
         let tz = FixedOffset::east_opt(0).expect("UTC offset");
+        let id_value = i64::from(user.id());
+        let is_new = id_value == 0;
 
         Ok(biz_metadata::ActiveModel {
-            id: Set(i64::from(user.id())),
+            id: if is_new { NotSet } else { Set(id_value) },
             code: Set(user.code().as_str().to_string()),
             name: Set(user.name().as_str().to_string()),
             description: Set(user.description().map(|d| d.to_string())),
@@ -134,8 +136,16 @@ impl ActiveModelMapper<BizMetadata, biz_metadata::ActiveModel> for BizMetadataMa
             unit: Set(user.unit().map(|u| u.as_str().to_string())),
             is_identifier: Set(user.is_identifier()),
             status: Set(user.status().as_str().to_string()),
-            created_at: Set(user.created_at().with_timezone(&tz)),
-            updated_at: Set(user.updated_at().with_timezone(&tz)),
+            created_at: if is_new {
+                NotSet
+            } else {
+                Set(user.created_at().with_timezone(&tz))
+            },
+            updated_at: if is_new {
+                NotSet
+            } else {
+                Set(user.updated_at().with_timezone(&tz))
+            },
             deleted_at: Set(user.delete_at().map(|d| d.with_timezone(&tz))),
         })
     }

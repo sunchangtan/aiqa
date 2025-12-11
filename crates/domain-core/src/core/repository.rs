@@ -11,13 +11,13 @@ where
     A: AggregateRoot + Send + Sync,
     A::Id: Send + Sync,
 {
-    /// 插入操作返回的异步任务类型，允许实现自定义 Future。
-    type InsertFuture<'a>: Future<Output = Result<(), DomainError>> + Send + 'a
+    /// 插入操作返回的异步任务类型，允许实现自定义 Future，返回持久化后的聚合（含数据库生成字段）。
+    type InsertFuture<'a>: Future<Output = Result<A, DomainError>> + Send + 'a
     where
         Self: 'a,
         A: 'a;
-    /// 更新操作返回的异步任务类型。
-    type UpdateFuture<'a>: Future<Output = Result<(), DomainError>> + Send + 'a
+    /// 更新操作返回的异步任务类型，返回最新聚合（含数据库自动字段）。
+    type UpdateFuture<'a>: Future<Output = Result<A, DomainError>> + Send + 'a
     where
         Self: 'a,
         A: 'a;
@@ -37,10 +37,10 @@ where
         Self: 'a,
         A: 'a;
 
-    /// 新增一个聚合根实例，若违反领域约束或唯一性应返回 [`DomainError`].
+    /// 新增一个聚合根实例，返回持久化后的聚合。
     fn insert(&self, aggregate: A) -> Self::InsertFuture<'_>;
 
-    /// 按照聚合根当前状态执行持久化更新。
+    /// 按照聚合根当前状态执行持久化更新，返回最新聚合。
     fn update(&self, aggregate: A) -> Self::UpdateFuture<'_>;
 
     /// 根据聚合根 ID 删除实体，可实现软删或硬删策略。

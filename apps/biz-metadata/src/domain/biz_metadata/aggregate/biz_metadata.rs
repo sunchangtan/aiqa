@@ -11,11 +11,10 @@ use domain_core::value_object::ValueObject;
 /// # 示例
 /// 创建并更新元数据：
 /// ```
-/// use biz_metadata::{BizMetadata, BizMetadataId, BizMetadataType, DataClass, BizMetadataStatus, ValueType};
+/// use biz_metadata::{BizMetadata, BizMetadataType, DataClass, BizMetadataStatus, ValueType};
 ///
 /// # fn main() -> Result<(), domain_core::domain_error::DomainError> {
 /// let mut biz_metadata = BizMetadata::new(
-///     BizMetadataId::new(1),
 ///     "company.finance.revenue",
 ///     "营业收入",
 ///     BizMetadataType::Attribute,
@@ -75,7 +74,6 @@ pub struct MetadataSnapshot {
 impl BizMetadata {
     /// 构造一个新的元数据聚合，并执行基础校验。
     pub fn new(
-        id: impl Into<BizMetadataId>,
         code: impl Into<String>,
         name: impl Into<String>,
         metadata_type: BizMetadataType,
@@ -84,7 +82,7 @@ impl BizMetadata {
     ) -> Result<Self, DomainError> {
         let now = Utc::now();
         Self::from_snapshot(MetadataSnapshot {
-            id: id.into(),
+            id: BizMetadataId::new(0),
             code: code.into(),
             name: name.into(),
             description: None,
@@ -329,7 +327,6 @@ mod tests {
     #[test]
     fn constructs_metadata_with_valid_inputs() {
         let biz_metadata = BizMetadata::new(
-            BizMetadataId::new(1),
             "code",
             "name",
             BizMetadataType::Attribute,
@@ -348,7 +345,6 @@ mod tests {
     #[test]
     fn rejects_empty_code() {
         let err = BizMetadata::new(
-            BizMetadataId::new(1),
             "",
             "name",
             BizMetadataType::Attribute,
@@ -363,7 +359,6 @@ mod tests {
     #[test]
     fn prevents_backward_delete_timestamp() {
         let mut biz_metadata = BizMetadata::new(
-            BizMetadataId::new(1),
             "code",
             "name",
             BizMetadataType::Attribute,

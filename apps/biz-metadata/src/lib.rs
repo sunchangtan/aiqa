@@ -16,6 +16,7 @@ use infrastructure::persistence::repository::biz_metadata_repository_impl::BizMe
 mod application;
 mod domain;
 mod infrastructure;
+pub mod interface;
 
 /// 根据数据库连接字符串构建 `MetadataService`，内部会创建 SeaORM 连接。
 pub async fn metadata_service_from_url(
@@ -29,6 +30,12 @@ pub async fn metadata_service_from_url(
 pub fn metadata_service_from_connection(
     db: DatabaseConnection,
 ) -> BizMetadataService<BizMetadataRepositoryImpl> {
+    let repository = BizMetadataRepositoryImpl::new(db);
+    BizMetadataService::new(repository)
+}
+
+/// 根据数据库连接构建 BizMetadataService，供 HTTP 适配层使用。
+pub fn build_service(db: DatabaseConnection) -> BizMetadataService<BizMetadataRepositoryImpl> {
     let repository = BizMetadataRepositoryImpl::new(db);
     BizMetadataService::new(repository)
 }

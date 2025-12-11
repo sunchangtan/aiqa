@@ -88,11 +88,11 @@ impl BizMetadataRepositoryImpl {
 
 impl Repository<BizMetadata> for BizMetadataRepositoryImpl {
     type InsertFuture<'a>
-        = RepoFuture<'a, ()>
+        = RepoFuture<'a, BizMetadata>
     where
         Self: 'a;
     type UpdateFuture<'a>
-        = RepoFuture<'a, ()>
+        = RepoFuture<'a, BizMetadata>
     where
         Self: 'a;
     type DeleteFuture<'a>
@@ -112,11 +112,23 @@ impl Repository<BizMetadata> for BizMetadataRepositoryImpl {
         let db = self.db.clone();
         repo_future(async move {
             let active = BizMetadataMapper::map_to_active_model(&aggregate)?;
-            BizMetadataEntity::insert(active)
+            let insert_result = BizMetadataEntity::insert(active)
                 .exec(&db)
                 .await
-                .map(|_| ())
-                .map_err(Self::map_db_err)
+                .map_err(Self::map_db_err)?;
+
+            let model = BizMetadataEntity::find_by_id(insert_result.last_insert_id)
+                .one(&db)
+                .await
+                .map_err(Self::map_db_err)?
+                .ok_or_else(|| DomainError::Persistence {
+                    message: format!(
+                        "biz_metadata {} not found after insert",
+                        insert_result.last_insert_id
+                    ),
+                })?;
+
+            BizMetadataMapper::map_to_domain(&model)
         })
     }
 
@@ -135,11 +147,9 @@ impl Repository<BizMetadata> for BizMetadataRepositoryImpl {
 
             BizMetadataMapper::apply_changes(&aggregate, &mut active)?;
 
-            active
-                .update(&db)
-                .await
-                .map(|_| ())
-                .map_err(Self::map_db_err)
+            let updated_model = active.update(&db).await.map_err(Self::map_db_err)?;
+
+            BizMetadataMapper::map_to_domain(&updated_model)
         })
     }
 

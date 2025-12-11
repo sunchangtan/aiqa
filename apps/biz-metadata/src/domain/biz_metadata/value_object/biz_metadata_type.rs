@@ -17,3 +17,13 @@ impl ValueObject for BizMetadataType {
         Ok(())
     }
 }
+
+impl BizMetadataType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            BizMetadataType::Attribute => "attribute",
+            BizMetadataType::Entity => "entity",
+            BizMetadataType::Event => "event",
+        }
+    }
+}

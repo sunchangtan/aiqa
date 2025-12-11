@@ -6,10 +6,9 @@ use crate::domain::biz_metadata::value_object::{
 ///
 /// # Examples
 /// ```
-/// use biz_metadata::{CreateBizMetadataCommand, BizMetadataId, BizMetadataType, DataClass};
+/// use biz_metadata::{CreateBizMetadataCommand, BizMetadataType, DataClass};
 ///
 /// let cmd = CreateBizMetadataCommand {
-///     id: BizMetadataId::new(1),
 ///     code: "user".into(),
 ///     name: "用户".into(),
 ///     description: None,
@@ -24,7 +23,6 @@ use crate::domain::biz_metadata::value_object::{
 /// assert_eq!(cmd.code, "user");
 /// ```
 pub struct CreateBizMetadataCommand {
-    pub id: BizMetadataId,
     pub code: String,
     pub name: String,
     pub metadata_type: BizMetadataType,
