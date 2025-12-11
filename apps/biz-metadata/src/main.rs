@@ -13,6 +13,9 @@ use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // 尝试从项目根目录的 .env 加载环境变量（如果没有 .env 会忽略错误）
+    let _ = dotenvy::dotenv();
+
     let db_url =
         std::env::var("DATABASE_URL").map_err(|_| "请设置环境变量 DATABASE_URL 以连接数据库")?;
 

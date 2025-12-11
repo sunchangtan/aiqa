@@ -208,9 +208,9 @@ pub struct ApiDoc;
 pub fn build_generated_router(state: AppState) -> axum::Router {
     axum::Router::new()
         .route("/", post(handler::create_biz_metadata))
-        .route("/:id", put(handler::update_biz_metadata))
-        .route("/:id", get(handler::get_biz_metadata))
-        .route("/:id", delete(handler::delete_biz_metadata))
+        .route("/{id}", put(handler::update_biz_metadata))
+        .route("/{id}", get(handler::get_biz_metadata))
+        .route("/{id}", delete(handler::delete_biz_metadata))
         .route("/", get(handler::list_biz_metadata))
         .with_state(state)
 }

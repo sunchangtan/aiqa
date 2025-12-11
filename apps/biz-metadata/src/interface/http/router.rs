@@ -18,7 +18,7 @@ impl Modify for BizMetadataPathPrefix {
         openapi.paths = new_paths;
         openapi.servers = Some(vec![
             utoipa::openapi::server::ServerBuilder::new()
-                .url(BIZ_METADATA_BASE)
+                .url("http://localhost:3000")
                 .build(),
         ]);
     }
