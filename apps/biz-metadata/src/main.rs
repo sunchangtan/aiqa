@@ -7,7 +7,6 @@
 //! ```
 use std::net::SocketAddr;
 
-use axum::Router;
 use biz_metadata::{interface::http::router::build_router, metadata_service_from_url};
 use tokio::net::TcpListener;
 
@@ -20,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::env::var("DATABASE_URL").map_err(|_| "请设置环境变量 DATABASE_URL 以连接数据库")?;
 
     let service = metadata_service_from_url(&db_url).await?;
-    let app: Router = build_router(service);
+    let app_layer = build_router(service);
 
     let addr: SocketAddr = std::env::var("BIZ_METADATA_HTTP_ADDR")
         .unwrap_or_else(|_| "0.0.0.0:3000".to_string())
@@ -31,6 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Swagger UI: http://{addr}/docs");
 
     let listener = TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app_layer).await?;
+
     Ok(())
 }

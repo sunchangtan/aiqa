@@ -12,9 +12,12 @@ impl Modify for BizMetadataPathPrefix {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         let mut new_paths = utoipa::openapi::path::Paths::new();
         for (path, item) in std::mem::take(&mut openapi.paths.paths) {
-            new_paths
-                .paths
-                .insert(format!("{BIZ_METADATA_BASE}{path}"), item);
+            let full_path = if path == "/" {
+                BIZ_METADATA_BASE.to_string()
+            } else {
+                format!("{BIZ_METADATA_BASE}{path}")
+            };
+            new_paths.paths.insert(full_path, item);
         }
         openapi.paths = new_paths;
         openapi.servers = Some(vec![
