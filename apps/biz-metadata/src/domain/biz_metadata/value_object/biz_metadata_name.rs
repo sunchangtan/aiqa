@@ -1,6 +1,4 @@
-use domain_core::prelude::{DomainError, ValueObject};
-
-use super::validate_non_empty;
+use domain_core::prelude::{DomainError, ValueObject, validate_non_empty};
 
 /// 强类型的元数据展示名称。
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

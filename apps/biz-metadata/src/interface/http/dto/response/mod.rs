@@ -1,9 +1,11 @@
-pub mod biz_metadata_response;
+pub mod biz_metadata;
+pub mod biz_metadata_alias;
 pub mod empty_payload;
 pub mod page_result_response;
 pub mod result_response;
 
-pub use biz_metadata_response::BizMetadataResponse;
+pub use biz_metadata::BizMetadataResponse;
+pub use biz_metadata_alias::BizMetadataAliasResponse;
 pub use empty_payload::EmptyPayload;
 pub use page_result_response::PageResultResponse;
 pub use result_response::ResultResponse;
@@ -12,3 +14,6 @@ pub use result_response::ResultResponse;
 pub type BizMetadataResponseBody = ResultResponse<BizMetadataResponse>;
 pub type BizMetadataPageResponseBody = ResultResponse<PageResultResponse<BizMetadataResponse>>;
 pub type EmptyResponseBody = ResultResponse<()>;
+pub type BizMetadataAliasResponseBody = ResultResponse<BizMetadataAliasResponse>;
+pub type BizMetadataAliasPageResponseBody =
+    ResultResponse<PageResultResponse<BizMetadataAliasResponse>>;

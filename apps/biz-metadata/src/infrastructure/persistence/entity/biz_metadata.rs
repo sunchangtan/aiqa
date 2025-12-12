@@ -6,16 +6,16 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
 #[sea_orm(table_name = "biz_metadata")]
 pub struct Model {
-    /// 自增主键。
     #[sea_orm(primary_key)]
+    /// 自增主键。
     pub id: i64,
-    /// 全局唯一业务编码。
     #[sea_orm(unique)]
+    /// 全局唯一业务编码。
     pub code: String,
     /// 标准业务名称（中文）。
     pub name: String,
-    /// 业务含义/口径描述。
     #[sea_orm(column_type = "Text", nullable)]
+    /// 业务含义/口径描述。
     pub description: Option<String>,
     /// 节点类型（entity/event/field/relation）。
     pub meta_type: String,

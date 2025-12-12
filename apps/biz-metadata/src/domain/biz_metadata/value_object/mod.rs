@@ -17,16 +17,3 @@ pub use biz_metadata_type::BizMetadataType;
 pub use data_class::DataClass;
 pub use unit::Unit;
 pub use value_type::ValueType;
-
-use domain_core::prelude::DomainError;
-
-/// 校验字符串是否非空并包含非空白字符。
-pub(crate) fn validate_non_empty(value: &str, label: &str) -> Result<(), DomainError> {
-    if value.trim().is_empty() {
-        Err(DomainError::Validation {
-            message: format!("{label} cannot be blank"),
-        })
-    } else {
-        Ok(())
-    }
-}

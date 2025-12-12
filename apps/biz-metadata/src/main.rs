@@ -7,7 +7,8 @@
 //! ```
 use std::net::SocketAddr;
 
-use biz_metadata::{interface::http::router::build_router, metadata_service_from_url};
+use biz_metadata::{build_alias_service, build_service, interface::http::router::build_router};
+use sea_orm::Database;
 use tokio::net::TcpListener;
 
 #[tokio::main]
@@ -18,8 +19,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db_url =
         std::env::var("DATABASE_URL").map_err(|_| "请设置环境变量 DATABASE_URL 以连接数据库")?;
 
-    let service = metadata_service_from_url(&db_url).await?;
-    let app_layer = build_router(service);
+    let db = Database::connect(&db_url).await?;
+    let biz_metadata_service = build_service(db.clone());
+    let biz_metadata_alias_service = build_alias_service(db);
+    let app_layer = build_router(biz_metadata_service, biz_metadata_alias_service);
 
     let addr: SocketAddr = std::env::var("BIZ_METADATA_HTTP_ADDR")
         .unwrap_or_else(|_| "0.0.0.0:3000".to_string())
@@ -30,7 +33,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Swagger UI: http://{addr}/docs");
 
     let listener = TcpListener::bind(addr).await?;
-    axum::serve(listener, app_layer).await?;
+    let make_service = app_layer.into_make_service();
+    axum::serve(listener, make_service).await?;
 
     Ok(())
 }

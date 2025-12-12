@@ -10,14 +10,15 @@ use crate::interface::http::{
         request::{BizMetadataListParams, CreateBizMetadataRequest, UpdateBizMetadataRequest},
         response::{BizMetadataResponse, EmptyPayload, PageResultResponse, ResultResponse},
     },
-    mapper::{BizMetadataDtoMapper, HttpError, map_domain_error},
+    error::{ApiError, from_domain_err, not_found, to_api_error},
+    mapper::{BizMetadataDtoMapper, HttpError},
 };
 
 use crate::interface::http::state::AppState;
 
 #[utoipa::path(
     post,
-    path = "/",
+    path = "/biz_metadata",
     request_body = CreateBizMetadataRequest,
     responses(
         (status = 201, body = ResultResponse<BizMetadataResponse>, description = "Created, Location header set"),
@@ -37,7 +38,7 @@ pub async fn create_biz_metadata(
     ),
     ApiError,
 > {
-    let service = &state.service;
+    let service = &state.biz_metadata_service;
     let cmd = BizMetadataDtoMapper::map_to_create_command(payload).map_err(to_api_error)?;
     let created = service
         .create_biz_metadata(cmd)
@@ -59,7 +60,7 @@ pub async fn create_biz_metadata(
 
 #[utoipa::path(
     put,
-    path = "/{id}",
+    path = "/biz_metadata/{id}",
     request_body = UpdateBizMetadataRequest,
     params(
         ("id" = i64, Path, description = "BizMetadata ID")
@@ -77,7 +78,7 @@ pub async fn update_biz_metadata(
     Path(id): Path<i64>,
     Json(payload): Json<UpdateBizMetadataRequest>,
 ) -> Result<Json<ResultResponse<BizMetadataResponse>>, ApiError> {
-    let service = &state.service;
+    let service = &state.biz_metadata_service;
     let cmd = BizMetadataDtoMapper::map_to_update_command(id, payload).map_err(to_api_error)?;
     let updated = service
         .update_biz_metadata(cmd)
@@ -91,7 +92,7 @@ pub async fn update_biz_metadata(
 
 #[utoipa::path(
     get,
-    path = "/{id}",
+    path = "/biz_metadata/{id}",
     params(
         ("id" = i64, Path, description = "BizMetadata ID")
     ),
@@ -106,7 +107,7 @@ pub async fn get_biz_metadata(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Result<Json<ResultResponse<BizMetadataResponse>>, ApiError> {
-    let service = &state.service;
+    let service = &state.biz_metadata_service;
     let found = service
         .find_biz_metadata_by_id(BizMetadataId::new(id))
         .await
@@ -119,7 +120,7 @@ pub async fn get_biz_metadata(
 
 #[utoipa::path(
     delete,
-    path = "/{id}",
+    path = "/biz_metadata/{id}",
     params(
         ("id" = i64, Path, description = "BizMetadata ID")
     ),
@@ -135,7 +136,7 @@ pub async fn delete_biz_metadata(
     Path(id): Path<i64>,
 ) -> Result<StatusCode, ApiError> {
     state
-        .service
+        .biz_metadata_service
         .delete_biz_metadata(BizMetadataId::new(id))
         .await
         .map_err(from_domain_err)?;
@@ -144,7 +145,7 @@ pub async fn delete_biz_metadata(
 
 #[utoipa::path(
     get,
-    path = "/",
+    path = "/biz_metadata",
     params(
         BizMetadataListParams
     ),
@@ -161,30 +162,11 @@ pub async fn list_biz_metadata(
     let query = BizMetadataDtoMapper::map_to_query_request(params);
 
     let page = state
-        .service
+        .biz_metadata_service
         .query_biz_metadata(query)
         .await
         .map_err(from_domain_err)?;
 
     let resp_page = BizMetadataDtoMapper::map_to_page_response(page);
     Ok(Json(ResultResponse::ok(resp_page)))
-}
-
-type ApiError = (StatusCode, Json<ResultResponse<EmptyPayload>>);
-
-fn to_api_error(err: HttpError) -> ApiError {
-    err.into_response()
-}
-
-fn from_domain_err(err: domain_core::domain_error::DomainError) -> ApiError {
-    map_domain_error(err).into_response()
-}
-
-fn not_found(message: impl Into<String>) -> ApiError {
-    HttpError {
-        status: StatusCode::NOT_FOUND,
-        code: StatusCode::NOT_FOUND.as_u16() as i32,
-        message: message.into(),
-    }
-    .into_response()
 }

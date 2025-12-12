@@ -1,6 +1,4 @@
-use domain_core::prelude::{DomainError, ValueObject};
-
-use super::validate_non_empty;
+use domain_core::prelude::{DomainError, ValueObject, validate_non_empty};
 
 /// 计量单位值对象，用于限制空白字符串。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

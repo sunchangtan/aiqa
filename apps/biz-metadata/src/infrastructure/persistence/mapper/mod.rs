@@ -13,4 +13,5 @@ pub trait ActiveModelMapper<Domain, ActiveModel> {
     fn map_to_active_model(domain: &Domain) -> Result<ActiveModel, DomainError>;
 }
 
+pub mod biz_metadata_alias_mapping;
 pub mod biz_metadata_mapping;

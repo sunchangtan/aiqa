@@ -5,4 +5,5 @@ pub use super::shared::{
     audit::Audit,
     expression::{Comparison, Expression, FilterValue, OrderBy, QueryOptions, SortDirection},
     pagination::Page,
+    validation::validate_non_empty,
 };

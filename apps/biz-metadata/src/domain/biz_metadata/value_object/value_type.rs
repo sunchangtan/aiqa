@@ -1,6 +1,4 @@
-use domain_core::prelude::{DomainError, ValueObject};
-
-use super::validate_non_empty;
+use domain_core::prelude::{DomainError, ValueObject, validate_non_empty};
 
 /// 单个允许的值类型（如 "int"、"decimal"、"string"）。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

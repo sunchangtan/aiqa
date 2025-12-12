@@ -1,9 +1,9 @@
 use crate::domain::biz_metadata::value_object::{
     BizMetadataCode, BizMetadataId, BizMetadataName, BizMetadataStatus, BizMetadataType, DataClass,
-    Unit, ValueType, validate_non_empty,
+    Unit, ValueType,
 };
 use chrono::{DateTime, Utc};
-use domain_core::prelude::{AggregateRoot, Audit, DomainError, Entity};
+use domain_core::prelude::{AggregateRoot, Audit, DomainError, Entity, validate_non_empty};
 use domain_core::value_object::ValueObject;
 
 /// 元数据聚合根，表示系统中的一个元数据定义实体。

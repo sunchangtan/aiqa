@@ -21,13 +21,12 @@ path = "src/lib.rs"
 chrono = { version = "0.4", default-features = true }
 domain-core = { path = "../../crates/domain-core" }
 sea-orm = { version = "2.0.0-rc.20", features = ["sqlx-postgres", "runtime-tokio-rustls"] }
-axum = { version = "0.8", features = ["macros", "json"] }
+axum = { version = "0.8", features = ["macros", "json", "http1", "http2", "tokio"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
 serde = { version = "1", features = ["derive"] }
 utoipa = { version = "5.4", features = ["axum_extras", "uuid"] }
 utoipa-swagger-ui = { version = "9.0", features = ["axum"] }
 dotenvy = "0.15"
-tower-http = { version = "0.6", features = ["cors"] }
 
 [dev-dependencies]
 
