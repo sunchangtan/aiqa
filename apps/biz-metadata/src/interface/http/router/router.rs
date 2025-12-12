@@ -5,6 +5,7 @@ use crate::application::service::biz_metadata_alias::BizMetadataAliasService;
 use crate::infrastructure::persistence::repository::biz_metadata_alias_repository_impl::BizMetadataAliasRepositoryImpl;
 use crate::infrastructure::persistence::repository::biz_metadata_repository_impl::BizMetadataRepositoryImpl;
 use crate::interface::http::state::AppState;
+use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
 
 // build.rs 生成的 OpenAPI 定义。
@@ -40,5 +41,6 @@ pub fn build_router(
 
     swagger
         .merge(api)
+        .layer(CorsLayer::permissive())
         .layer(NormalizePathLayer::trim_trailing_slash())
 }
