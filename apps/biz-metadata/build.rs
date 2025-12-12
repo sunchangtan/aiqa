@@ -247,17 +247,10 @@ fn render_api_doc(
             let routes_str = routes
                 .iter()
                 .map(|r| {
-                    let mut lines = vec![format!(
+                    format!(
                         "        .route(\"{}\", {}(crate::interface::http::handler::{}))",
                         r.path, r.method, r.name
-                    )];
-                    if !r.path.ends_with('/') && !r.path.contains('{') {
-                        lines.push(format!(
-                            "        .route(\"{}/\", {}(crate::interface::http::handler::{}))",
-                            r.path, r.method, r.name
-                        ));
-                    }
-                    lines.join("\n")
+                    )
                 })
                 .collect::<Vec<_>>()
                 .join("\n");
@@ -287,9 +280,27 @@ use crate::interface::http::dto::response::{
     tags(
         (name = "biz_metadata", description = "BizMetadata HTTP API"),
         (name = "biz_metadata_alias", description = "BizMetadata Alias HTTP API")
-    )
+    ),
+    modifiers(&TrimTrailingSlash)
 )]
 pub struct ApiDoc;
+
+pub struct TrimTrailingSlash;
+
+impl utoipa::Modify for TrimTrailingSlash {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        let mut new_paths = utoipa::openapi::path::Paths::new();
+        for (path, item) in std::mem::take(&mut openapi.paths.paths) {
+            let normalized = if path != "/" && path.ends_with('/') {
+                path.trim_end_matches('/').to_string()
+            } else {
+                path
+            };
+            new_paths.paths.insert(normalized, item);
+        }
+        openapi.paths = new_paths;
+    }
+}
 
 {routes}
 "#;
