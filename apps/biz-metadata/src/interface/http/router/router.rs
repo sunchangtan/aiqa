@@ -26,7 +26,9 @@ pub fn build_router(
     let swagger: Router<()> = Router::<AppState>::new()
         .merge(SwaggerUi::new("/docs").url("/openapi.json", openapi))
         .with_state(state.clone());
-    let api = build_generated_router(state);
+
+    let api = generated_routes_biz_metadata(state.clone())
+        .merge(generated_routes_biz_metadata_alias(state));
 
     swagger.merge(api)
 }

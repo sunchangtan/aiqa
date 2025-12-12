@@ -83,6 +83,7 @@ fn collect_routes(handler_files: &[PathBuf]) -> Vec<(String, Vec<RouteInfo>)> {
                 let attr_block = attr_lines.join("\n");
                 let method = parse_method(&attr_block);
                 let path_value = parse_path(&attr_block);
+                let context_path = parse_context_path(&attr_block);
 
                 for fn_line in lines.by_ref() {
                     let trimmed = fn_line.trim_start();
@@ -92,9 +93,10 @@ fn collect_routes(handler_files: &[PathBuf]) -> Vec<(String, Vec<RouteInfo>)> {
                             .and_then(|rest| rest.split('(').next())
                             && let (Some(m), Some(p)) = (method.clone(), path_value.clone())
                         {
+                            let full_path = combine_path(context_path.as_deref(), &p);
                             grouped.entry(group.clone()).or_default().push(RouteInfo {
                                 method: m,
-                                path: p,
+                                path: full_path,
                                 name: name.trim().to_string(),
                             });
                         }
@@ -245,10 +247,17 @@ fn render_api_doc(
             let routes_str = routes
                 .iter()
                 .map(|r| {
-                    format!(
+                    let mut lines = vec![format!(
                         "        .route(\"{}\", {}(crate::interface::http::handler::{}))",
                         r.path, r.method, r.name
-                    )
+                    )];
+                    if !r.path.ends_with('/') && !r.path.contains('{') {
+                        lines.push(format!(
+                            "        .route(\"{}/\", {}(crate::interface::http::handler::{}))",
+                            r.path, r.method, r.name
+                        ));
+                    }
+                    lines.join("\n")
                 })
                 .collect::<Vec<_>>()
                 .join("\n");
@@ -258,18 +267,6 @@ fn render_api_doc(
         })
         .collect::<Vec<_>>()
         .join("\n\n");
-
-    let merge_calls = if let Some((first_group, _)) = route_groups.first() {
-        let mut lines = vec![format!("    generated_routes_{first_group}(state.clone())")];
-        for (group, _) in route_groups.iter().skip(1) {
-            lines.push(format!(
-                "        .merge(generated_routes_{group}(state.clone()))"
-            ));
-        }
-        lines.join("\n")
-    } else {
-        "    axum::Router::new()".to_string()
-    };
 
     let template = r#"
 use utoipa::OpenApi;
@@ -294,9 +291,6 @@ use crate::interface::http::dto::response::{
 )]
 pub struct ApiDoc;
 
-pub fn build_generated_router(state: crate::interface::http::state::AppState) -> axum::Router<()> {
-{merge_calls}
-}
 {routes}
 "#;
 
@@ -304,7 +298,6 @@ pub fn build_generated_router(state: crate::interface::http::state::AppState) ->
         .replace("{paths}", &paths_joined)
         .replace("{schemas}", &schemas_joined)
         .replace("{routes}", &route_defs)
-        .replace("{merge_calls}", &merge_calls)
 }
 
 /// 从属性块解析 HTTP 方法。
@@ -318,15 +311,61 @@ fn parse_method(attr_block: &str) -> Option<String> {
     None
 }
 
-/// 从属性块解析 path = "...".
+/// 从属性块解析 path = "..."，支持常量或字面量。
 fn parse_path(attr_block: &str) -> Option<String> {
-    let needle = "path";
-    let pos = attr_block.find(needle)?;
-    let rest = &attr_block[pos + needle.len()..];
-    let eq = rest.find('=')?;
-    let rest = rest[eq + 1..].trim_start();
-    let start_quote = rest.find('"')?;
-    let rest = &rest[start_quote + 1..];
-    let end = rest.find('"')?;
-    Some(rest[..end].to_string())
+    parse_attr_line(attr_block, "path")
+}
+
+/// 从属性块解析 context_path = "..."，支持常量或字面量。
+fn parse_context_path(attr_block: &str) -> Option<String> {
+    parse_attr_line(attr_block, "context_path")
+}
+
+/// 解析类似 `field = "..."` 或 `field = CONST_NAME` 的行。
+fn parse_attr_line(attr_block: &str, field: &str) -> Option<String> {
+    for line in attr_block.lines() {
+        let trimmed = line.trim();
+        if !trimmed.starts_with(field) {
+            continue;
+        }
+        let Some((_, rhs)) = trimmed.split_once('=') else {
+            continue;
+        };
+        let value = rhs.trim().trim_end_matches(',');
+        if let Some(stripped) = value.strip_prefix('"') {
+            let end = stripped.find('"')?;
+            return Some(stripped[..end].to_string());
+        } else if let Some(resolved) = resolve_context_const(value.trim()) {
+            return Some(resolved);
+        }
+    }
+    None
+}
+
+fn resolve_context_const(name: &str) -> Option<String> {
+    match name {
+        "BIZ_METADATA_CONTEXT" => Some("/biz_metadata".to_string()),
+        "BIZ_METADATA_ALIAS_CONTEXT" => Some("/biz_metadata_alias".to_string()),
+        _ => None,
+    }
+}
+
+/// 组合 context_path 与子路径，确保不会出现重复斜杠。
+fn combine_path(context_path: Option<&str>, path: &str) -> String {
+    let base = context_path.unwrap_or("").trim_end_matches('/');
+    if path == "/" {
+        return if base.is_empty() {
+            "/".to_string()
+        } else {
+            base.to_string()
+        };
+    }
+    let sub = path.trim_start_matches('/');
+    if base.is_empty() {
+        format!("/{}", sub)
+    } else if sub.is_empty() {
+        base.to_string()
+    } else {
+        format!("{base}/{sub}")
+    }
 }

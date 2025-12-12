@@ -1,7 +1,7 @@
 use axum::{
     Json,
     extract::{Path, Query, State},
-    http::StatusCode,
+    http::{HeaderValue, StatusCode},
 };
 
 use crate::domain::biz_metadata_alias::value_object::BizMetadataAliasId;
@@ -15,15 +15,18 @@ use crate::interface::http::dto::{
     },
 };
 use crate::interface::http::error::{ApiError, from_domain_err, not_found, to_api_error};
-use crate::interface::http::mapper::BizMetadataAliasDtoMapper;
+use crate::interface::http::mapper::{BizMetadataAliasDtoMapper, HttpError};
 use crate::interface::http::state::AppState;
+
+pub(crate) const BIZ_METADATA_ALIAS_CONTEXT: &str = "/biz_metadata_alias";
 
 #[utoipa::path(
     post,
-    path = "/biz_metadata_alias",
+    context_path = BIZ_METADATA_ALIAS_CONTEXT,
+    path = "/",
     request_body = CreateBizMetadataAliasRequest,
     responses(
-        (status = 201, body = ResultResponse<BizMetadataAliasResponse>, description = "Created"),
+        (status = 201, body = ResultResponse<BizMetadataAliasResponse>, description = "Created, Location header set"),
         (status = 400, body = ResultResponse<EmptyPayload>),
         (status = 500, body = ResultResponse<EmptyPayload>)
     ),
@@ -32,15 +35,27 @@ use crate::interface::http::state::AppState;
 pub async fn create_biz_metadata_alias(
     State(state): State<AppState>,
     Json(payload): Json<CreateBizMetadataAliasRequest>,
-) -> Result<(StatusCode, Json<BizMetadataAliasResponseBody>), ApiError> {
+) -> Result<
+    (
+        StatusCode,
+        [(axum::http::header::HeaderName, HeaderValue); 1],
+        Json<BizMetadataAliasResponseBody>,
+    ),
+    ApiError,
+> {
     let cmd = BizMetadataAliasDtoMapper::map_to_create_command(payload).map_err(to_api_error)?;
     let created = state
         .biz_metadata_alias_service
         .create_alias(cmd)
         .await
         .map_err(from_domain_err)?;
+    let location = format!("{}/{}", BIZ_METADATA_ALIAS_CONTEXT, created.id().value());
+    let location_header = HeaderValue::from_str(&location)
+        .map_err(|_| to_api_error(HttpError::bad_request("invalid Location header")))?;
+
     Ok((
         StatusCode::CREATED,
+        [(axum::http::header::LOCATION, location_header)],
         Json(ResultResponse::ok(
             BizMetadataAliasDtoMapper::map_to_response(created),
         )),
@@ -49,7 +64,8 @@ pub async fn create_biz_metadata_alias(
 
 #[utoipa::path(
     put,
-    path = "/biz_metadata_alias/{id}",
+    context_path = BIZ_METADATA_ALIAS_CONTEXT,
+    path = "/{id}",
     request_body = UpdateBizMetadataAliasRequest,
     params(
         ("id" = i64, Path, description = "BizMetadataAlias ID")
@@ -81,7 +97,8 @@ pub async fn update_biz_metadata_alias(
 
 #[utoipa::path(
     get,
-    path = "/biz_metadata_alias/{id}",
+    context_path = BIZ_METADATA_ALIAS_CONTEXT,
+    path = "/{id}",
     params(
         ("id" = i64, Path, description = "BizMetadataAlias ID")
     ),
@@ -109,7 +126,8 @@ pub async fn get_biz_metadata_alias(
 
 #[utoipa::path(
     delete,
-    path = "/biz_metadata_alias/{id}",
+    context_path = BIZ_METADATA_ALIAS_CONTEXT,
+    path = "/{id}",
     params(
         ("id" = i64, Path, description = "BizMetadataAlias ID")
     ),
@@ -134,7 +152,8 @@ pub async fn delete_biz_metadata_alias(
 
 #[utoipa::path(
     get,
-    path = "/biz_metadata_alias",
+    context_path = BIZ_METADATA_ALIAS_CONTEXT,
+    path = "/",
     params(
         BizMetadataAliasListParams
     ),

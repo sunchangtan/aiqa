@@ -16,9 +16,12 @@ use crate::interface::http::{
 
 use crate::interface::http::state::AppState;
 
+pub(crate) const BIZ_METADATA_CONTEXT: &str = "/biz_metadata";
+
 #[utoipa::path(
     post,
-    path = "/biz_metadata",
+    context_path = BIZ_METADATA_CONTEXT,
+    path = "/",
     request_body = CreateBizMetadataRequest,
     responses(
         (status = 201, body = ResultResponse<BizMetadataResponse>, description = "Created, Location header set"),
@@ -60,7 +63,8 @@ pub async fn create_biz_metadata(
 
 #[utoipa::path(
     put,
-    path = "/biz_metadata/{id}",
+    context_path = BIZ_METADATA_CONTEXT,
+    path = "/{id}",
     request_body = UpdateBizMetadataRequest,
     params(
         ("id" = i64, Path, description = "BizMetadata ID")
@@ -92,7 +96,8 @@ pub async fn update_biz_metadata(
 
 #[utoipa::path(
     get,
-    path = "/biz_metadata/{id}",
+    context_path = BIZ_METADATA_CONTEXT,
+    path = "/{id}",
     params(
         ("id" = i64, Path, description = "BizMetadata ID")
     ),
@@ -120,7 +125,8 @@ pub async fn get_biz_metadata(
 
 #[utoipa::path(
     delete,
-    path = "/biz_metadata/{id}",
+    context_path = BIZ_METADATA_CONTEXT,
+    path = "/{id}",
     params(
         ("id" = i64, Path, description = "BizMetadata ID")
     ),
@@ -145,7 +151,8 @@ pub async fn delete_biz_metadata(
 
 #[utoipa::path(
     get,
-    path = "/biz_metadata",
+    context_path = BIZ_METADATA_CONTEXT,
+    path = "/",
     params(
         BizMetadataListParams
     ),
