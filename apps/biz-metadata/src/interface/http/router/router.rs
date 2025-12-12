@@ -16,6 +16,7 @@ pub fn build_router(
     biz_metadata_alias_service: BizMetadataAliasService<BizMetadataAliasRepositoryImpl>,
 ) -> Router<()> {
     use std::sync::Arc;
+    use utoipa::openapi::server::ServerBuilder;
     use utoipa_swagger_ui::SwaggerUi;
 
     let state = AppState {
@@ -23,7 +24,13 @@ pub fn build_router(
         biz_metadata_alias_service: Arc::new(biz_metadata_alias_service),
     };
 
-    let openapi = ApiDoc::openapi();
+    let mut openapi = ApiDoc::openapi();
+    openapi.servers = Some(vec![
+        ServerBuilder::new()
+            .url("http://127.0.0.1:3000")
+            .description(Some("Localhost"))
+            .build(),
+    ]);
     let swagger: Router<()> = Router::<AppState>::new()
         .merge(SwaggerUi::new("/docs").url("/openapi.json", openapi))
         .with_state(state.clone());
