@@ -8,88 +8,106 @@ fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("manifest dir"));
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR"));
 
-    let handler_path = manifest_dir.join("src/interface/http/handler.rs");
+    let handler_dir = manifest_dir.join("src/interface/http/handler");
     let dto_request_dir = manifest_dir.join("src/interface/http/dto/request");
     let dto_response_dir = manifest_dir.join("src/interface/http/dto/response");
 
-    let handlers = collect_handlers(&handler_path);
-    let body_types = collect_body_types(&handler_path);
+    let handler_files = gather_rs_files(&handler_dir);
+    let handlers = collect_handlers(&handler_files);
+    let body_types = collect_body_types(&handler_files);
     let schemas = collect_schemas(&[dto_request_dir, dto_response_dir], &body_types);
 
     let generated = render_api_doc(&handlers, &schemas);
     let out_file = out_dir.join("api_doc.rs");
     fs::write(&out_file, generated).expect("write api_doc.rs");
-    println!("cargo:rerun-if-changed={}", handler_path.display());
+    println!("cargo:rerun-if-changed={}", handler_dir.display());
     println!(
         "cargo:rerun-if-changed={}",
         manifest_dir.join("src/interface/http/dto").display()
     );
 }
 
-fn collect_handlers(handler_path: &Path) -> Vec<String> {
-    let content = fs::read_to_string(handler_path).expect("read handler.rs");
-    let mut handlers = Vec::new();
-    let mut lines = content.lines().peekable();
-    while let Some(line) = lines.next() {
-        if line.trim_start().starts_with("#[utoipa::path") {
-            // advance until we see a function definition
-            for fn_line in lines.by_ref() {
-                let trimmed = fn_line.trim_start();
-                if trimmed.starts_with("pub async fn ") {
-                    if let Some(name) = trimmed
-                        .strip_prefix("pub async fn ")
-                        .and_then(|rest| rest.split('(').next())
-                    {
-                        handlers.push(name.trim().to_string());
+fn gather_rs_files(dir: &Path) -> Vec<PathBuf> {
+    fs::read_dir(dir)
+        .expect("read handler dir")
+        .flatten()
+        .filter_map(|e| {
+            let p = e.path();
+            if p.extension().and_then(|ext| ext.to_str()) == Some("rs") {
+                Some(p)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn collect_handlers(handler_files: &[PathBuf]) -> Vec<String> {
+    let mut all = Vec::new();
+    for path in handler_files {
+        let content = fs::read_to_string(path).expect("read handler file");
+        let mut lines = content.lines().peekable();
+        while let Some(line) = lines.next() {
+            if line.trim_start().starts_with("#[utoipa::path") {
+                for fn_line in lines.by_ref() {
+                    let trimmed = fn_line.trim_start();
+                    if trimmed.starts_with("pub async fn ") {
+                        if let Some(name) = trimmed
+                            .strip_prefix("pub async fn ")
+                            .and_then(|rest| rest.split('(').next())
+                        {
+                            all.push(name.trim().to_string());
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
     }
-    handlers
+    all
 }
 
-fn collect_body_types(handler_path: &Path) -> Vec<String> {
-    let content = fs::read_to_string(handler_path).expect("read handler.rs");
+fn collect_body_types(handler_files: &[PathBuf]) -> Vec<String> {
     let mut types = BTreeSet::new();
     let markers = ["body"];
-    for attr_block in content.split("#[utoipa::path").skip(1) {
-        // tokens start after attribute marker
-        let token_str = attr_block;
-        for marker in markers {
-            let mut search = 0;
-            while let Some(pos) = token_str[search..].find(marker) {
-                let pos = pos + search;
-                // 跳过 request_body 等前缀
-                if token_str[..pos].ends_with("request_") {
-                    search = pos + marker.len();
-                    continue;
-                }
-                let rest = &token_str[pos + marker.len()..];
-                let Some(eq_pos_rel) = rest.find('=') else {
-                    break;
-                };
-                let rest_after_eq = &rest[eq_pos_rel + 1..];
-                let rest_after_eq = rest_after_eq.trim_start();
-                let mut end = rest_after_eq.len();
-                for (i, ch) in rest_after_eq.char_indices() {
-                    if ch == ',' || ch == ')' {
-                        end = i;
-                        break;
-                    }
-                }
-                let ty = rest_after_eq[..end].trim();
-                if !ty.is_empty() {
-                    let normalized = normalize_type(ty);
-                    // 仅保留包含泛型或绝对路径的类型，避免与 DTO 扫描重复。
-                    if !normalized.contains("::") && !normalized.contains('<') {
-                        search = pos + marker.len() + eq_pos_rel + end;
+    for path in handler_files {
+        let content = fs::read_to_string(path).expect("read handler file");
+        for attr_block in content.split("#[utoipa::path").skip(1) {
+            let token_str = attr_block;
+            for marker in markers {
+                let mut search = 0;
+                while let Some(pos) = token_str[search..].find(marker) {
+                    let pos = pos + search;
+                    // 跳过 request_body 等前缀
+                    if token_str[..pos].ends_with("request_") {
+                        search = pos + marker.len();
                         continue;
                     }
-                    types.insert(normalized);
+                    let rest = &token_str[pos + marker.len()..];
+                    let Some(eq_pos_rel) = rest.find('=') else {
+                        break;
+                    };
+                    let rest_after_eq = &rest[eq_pos_rel + 1..];
+                    let rest_after_eq = rest_after_eq.trim_start();
+                    let mut end = rest_after_eq.len();
+                    for (i, ch) in rest_after_eq.char_indices() {
+                        if ch == ',' || ch == ')' {
+                            end = i;
+                            break;
+                        }
+                    }
+                    let ty = rest_after_eq[..end].trim();
+                    if !ty.is_empty() {
+                        let normalized = normalize_type(ty);
+                        // 仅保留包含泛型或绝对路径的类型，避免与 DTO 扫描重复。
+                        if !normalized.contains("::") && !normalized.contains('<') {
+                            search = pos + marker.len() + eq_pos_rel + end;
+                            continue;
+                        }
+                        types.insert(normalized);
+                    }
+                    search = pos + marker.len() + eq_pos_rel + end;
                 }
-                search = pos + marker.len() + eq_pos_rel + end;
             }
         }
     }
