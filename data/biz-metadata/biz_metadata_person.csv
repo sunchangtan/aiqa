@@ -1,0 +1,6 @@
+﻿tenant_id,version,code,name,description,object_type,parent_code,data_class,value_type,unit,status,source
+default,1,person,人员,自然人实体，表示一个可被多次引用的人员主体。,entity,,,,,active,manual
+default,1,person.id,人员标识,人员标识符命名空间，收敛用于实体识别/跨源映射的ID字段。,feature,person,object,json<object:person.id>,,active,manual
+default,1,person.id.person_id,人员ID,平台/MDM 规范化人员主键（全局唯一、持久不变、跨源映射锚点）。,feature,person.id,identifier,string,,active,manual
+default,1,person.base,人员基本信息,人员基本信息集合，包含姓名等字段。,feature,person,object,json<object:person.base>,,active,manual
+default,1,person.base.name,姓名,人员姓名（全名）。可用于对齐 company.base.legal_rep_name 等角色姓名字段。,feature,person.base,attribute,string,,active,manual

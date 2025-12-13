@@ -1,0 +1,37 @@
+﻿tenant_id,version,code,name,description,object_type,parent_code,data_class,value_type,unit,status,source
+default,1,company,公司,公司实体，表示一个工商注册企业主体,entity,,,,,active,manual
+default,1,company.id,公司标识,公司标识符命名空间，收敛各类用于实体识别/跨源映射的ID字段。,feature,company,object,json<object:company.id>,,active,manual
+default,1,company.id.company_id,公司ID,平台/MDM 规范化公司主键（全局唯一、持久不变、跨源映射锚点）。,feature,company.id,identifier,string,,active,manual
+default,1,company.id.uscc,统一社会信用代码,公司统一社会信用代码，国家统一颁发的企业唯一识别号。,feature,company.id,identifier,string,,active,manual
+default,1,company.id.reg_no,工商注册号,公司工商注册号，部分企业沿用旧注册号字段。,feature,company.id,identifier,string,,active,manual
+default,1,company.id.org_code,组织机构代码,公司组织机构代码，用于标识企事业单位组织身份。,feature,company.id,identifier,string,,active,manual
+default,1,company.id.tax_id,纳税人识别号,公司纳税人识别号，用于税务登记和报税。,feature,company.id,identifier,string,,active,manual
+default,1,company.base,基本档案,公司工商基本信息集合，包含名称、成立时间、资本、地址等字段。,feature,company,object,json<object:company.base>,,active,manual
+default,1,company.base.name_zh,公司名称（中文）,公司法定注册中文名称，用于唯一识别企业中文全称。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.name_abbr,公司简称,公司常用简称或品牌简称，用于日常称呼。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.name_en,英文名称,公司在工商或公开信息中的英文名称。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.name_hist,曾用名,公司历史名称列表，记录企业名称变更情况。,feature,company.base,array,json<array:string>,,active,manual
+default,1,company.base.legal_rep_name,法定代表人姓名,公司法定代表人姓名（原文字符串）。语义对齐：person.base.name。,feature,company.base,attribute,ref:person.base.name,,active,manual
+default,1,company.base.legal_rep_id,法定代表人ID,公司法定代表人对应人员主键ID（若已解析/映射到 person）。类型引用：person.id.person_id。,feature,company.base,attribute,ref:person.id.person_id,,active,manual
+default,1,company.base.est_dt,成立日期,公司成立日期或注册日期，对应营业执照上的成立时间。,feature,company.base,attribute,date,,active,manual
+default,1,company.base.op_term_start_dt,营业期限开始,公司营业期限起始日期，标识经营开始时间。,feature,company.base,attribute,date,,active,manual
+default,1,company.base.op_term_end_dt,营业期限结束,公司营业期限结束日期，长期经营企业可能为空。,feature,company.base,attribute,date,,active,manual
+default,1,company.base.approval_dt,核准日期,工商部门最近一次核准或变更登记日期。,feature,company.base,attribute,date,,active,manual
+default,1,company.base.revoke_dt,吊销日期,公司营业执照被吊销的日期。,feature,company.base,attribute,date,,active,manual
+default,1,company.base.cancel_dt,注销日期,公司办理工商注销登记完成的日期。,feature,company.base,attribute,date,,active,manual
+default,1,company.base.reg_status,企业状态,公司当前工商状态，如在营、存续、吊销、注销等。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.reg_cap_amt,注册资本,公司注册资本金额数值（未归一化）。需结合 company.base.reg_cap_unit（元/万元等）与 company.base.reg_cap_ccy（币种）解释。,feature,company.base,metric,decimal,,active,manual
+default,1,company.base.reg_cap_ccy,注册币种,注册资本对应币种（建议 ISO 4217，例如 CNY、USD）。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.reg_cap_unit,资金单位,注册资本金额数量级单位/倍率（例如 元、万元、亿元）。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.reg_auth,登记机关,为公司办理工商登记的登记机关名称。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.biz_scope,经营范围,公司经工商核准的经营范围文本描述。,feature,company.base,text,string,,active,manual
+default,1,company.base.biz_hist_desc,公司沿革,公司发展沿革、历史变更和重要事件的文字说明。,feature,company.base,text,string,,active,manual
+default,1,company.base.addr_reg,注册地址,公司工商登记中的注册地址或住所地。,feature,company.base,text,string,,active,manual
+default,1,company.base.addr_office,办公地址,公司实际办公地址或经营场所地址。,feature,company.base,text,string,,active,manual
+default,1,company.base.addr_mail,通信地址,公司接收信函、邮寄资料的通信地址。,feature,company.base,text,string,,active,manual
+default,1,company.base.contact_tel,企业电话,公司对外公开的联系电话或总机电话。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.contact_email,企业邮箱,公司对外公开的联系电子邮箱地址。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.website_url,企业网址,公司官方网站或主要对外网站地址。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.zip_code,邮政编码,公司所在地区邮政编码，用于邮件寄送。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.staff_num_desc,从业人数,公司从业人员数量的文字描述，可能为人数或区间。,feature,company.base,attribute,string,,active,manual
+default,1,company.base.insur_num_desc,参保人数,公司参加社会保险人数的文字描述，可能为人数或区间。,feature,company.base,attribute,string,,active,manual
