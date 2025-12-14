@@ -7,8 +7,6 @@ pub enum BizMetadataStatus {
     Active,
     /// 已弃用。
     Deprecated,
-    /// 草稿中。
-    Draft,
 }
 
 impl BizMetadataStatus {
@@ -22,7 +20,6 @@ impl BizMetadataStatus {
         match self {
             BizMetadataStatus::Active => "active",
             BizMetadataStatus::Deprecated => "deprecated",
-            BizMetadataStatus::Draft => "draft",
         }
     }
 }
@@ -34,7 +31,6 @@ impl TryFrom<&str> for BizMetadataStatus {
         match value.to_ascii_lowercase().as_str() {
             "active" => Ok(BizMetadataStatus::Active),
             "deprecated" => Ok(BizMetadataStatus::Deprecated),
-            "draft" => Ok(BizMetadataStatus::Draft),
             other => Err(DomainError::Validation {
                 message: format!("invalid status: {other}"),
             }),

@@ -1,0 +1,12 @@
+﻿tenant_id,version,code,name,description,object_type,parent_code,data_class,value_type,unit,status,source
+default,1,relation.company_shareholding,公司股东持股关系,股东持股/出资关系定义。一条记录表示某股东对某公司的持股或出资信息；来源：股东信息接口。,relation,,,,,active,api_sync
+default,1,relation.company_shareholding.company_id,公司ID,被投资公司主键引用，对齐 company.id.company_id。,feature,relation.company_shareholding,attribute,ref:company.id.company_id,,active,api_sync
+default,1,relation.company_shareholding.company_name_zh,公司名称（中文）,被投资公司中文名称引用，对齐 company.base.name_zh。,feature,relation.company_shareholding,attribute,ref:company.base.name_zh,,active,api_sync
+default,1,relation.company_shareholding.contribution_dt,出资时间,出资时间。,feature,relation.company_shareholding,attribute,date,,active,api_sync
+default,1,relation.company_shareholding.contribution_form,出资形式,股东出资形式（如 货币/实物/知识产权 等）。,feature,relation.company_shareholding,attribute,string,,active,api_sync
+default,1,relation.company_shareholding.holding_qty,持股数量/出资数值,股东对公司的持股数量或认缴数值（数值本体）。语义需结合 holding_qty_unit 判定。,feature,relation.company_shareholding,metric,decimal,,active,api_sync
+default,1,relation.company_shareholding.holding_qty_unit,持股数量/出资单位,holding_qty 的单位（例如 股、万元 等）。,feature,relation.company_shareholding,attribute,string,,active,api_sync
+default,1,relation.company_shareholding.shareholder_id,股东ID,股东主体ID（可为公司或自然人主体的主键引用）。,feature,relation.company_shareholding,attribute,ref:entity.id.entity_id,,active,api_sync
+default,1,relation.company_shareholding.shareholder_name,股东名称,股东主体名称（可为公司名称或自然人姓名）。,feature,relation.company_shareholding,attribute,ref:entity.base.name,,active,api_sync
+default,1,relation.company_shareholding.shareholder_type,股东类型,股东类型（如 自然人股东/企业法人/其它证券账户 等）。,feature,relation.company_shareholding,attribute,string,,active,api_sync
+default,1,relation.company_shareholding.shareholding_ratio,持股比例,股东对公司的持股比例。,feature,relation.company_shareholding,metric,decimal,pct,active,api_sync

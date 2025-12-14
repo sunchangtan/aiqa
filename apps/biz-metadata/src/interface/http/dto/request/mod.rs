@@ -3,6 +3,7 @@ pub mod biz_metadata_alias;
 
 pub use biz_metadata::{
     create_biz_metadata_request::CreateBizMetadataRequest,
+    delete_biz_metadata_params::DeleteBizMetadataParams,
     list_biz_metadata_params::BizMetadataListParams,
     update_biz_metadata_request::UpdateBizMetadataRequest,
 };

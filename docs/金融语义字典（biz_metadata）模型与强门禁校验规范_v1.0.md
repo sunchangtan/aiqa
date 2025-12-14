@@ -188,6 +188,7 @@
 
 - 统一语法：`ref:<code>`
 - `<code>` 必须是同一 tenant 下已存在的 `biz_metadata.code`，且其 `object_type=feature`、`status=active`。
+- TypeRef 可参与 Union（用于“多来源同语义类型引用”）：`ref:company.id.company_id | ref:person.id.person_id`（`|` 两侧允许空白，不影响语义）。
 - Import Gate / Publish Gate 需要对 `ref:` 做解析（可递归展开），并在**展开后的最终类型**上继续执行既有门禁（identifier/unit/object/array 完整性等）。
 - 禁止循环引用；建议最大展开深度 5（超限视为配置错误）。
 
@@ -268,7 +269,7 @@
 > 本文档用于金融级 Semantic OS 的 **biz_metadata v3** 元数据治理，覆盖：
 > - 语义字典强门禁规则（规则表 + 错误码）
 > - 数据库侧硬约束设计（DB Guardrails）
-> - 校验器实现骨架（Rust / Python）
+> - 校验器实现骨架（Python）
 
 ---
 

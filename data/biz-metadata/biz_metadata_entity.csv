@@ -1,0 +1,6 @@
+﻿tenant_id,version,code,name,description,object_type,parent_code,data_class,value_type,unit,status,source
+default,1,entity,主体实体（公司/自然人）,统一主体抽象实体，用于承载公司与自然人的统一标识与展示名称等共性字段。,entity,,,,,active,manual
+default,1,entity.id,主体标识,主体标识命名空间。,feature,entity,object,json<object:entity.id>,,active,manual
+default,1,entity.id.entity_id,主体ID,主体统一主键（全局唯一）。公司与自然人主键应映射到该 ID 空间。,feature,entity.id,identifier,string,,active,manual
+default,1,entity.base,主体基本信息,主体基础信息命名空间。,feature,entity,object,json<object:entity.base>,,active,manual
+default,1,entity.base.name,主体名称,主体主展示名称（公司中文全称或自然人姓名）。,feature,entity.base,attribute,string,,active,manual

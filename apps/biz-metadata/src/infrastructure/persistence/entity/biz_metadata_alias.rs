@@ -7,25 +7,15 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "biz_metadata_alias")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    /// 自增主键。
     pub id: i64,
-    /// 关联的标准元数据 ID。
     pub metadata_id: i64,
-    /// 自然语言别名。
     pub alias: String,
-    /// 别名来源。
     pub source: String,
-    /// 匹配权重。
     pub weight: i32,
-    /// 是否首选别名。
     pub is_primary: bool,
-    /// 语言编码。
     pub language: String,
-    /// 创建时间。
     pub created_at: DateTimeWithTimeZone,
-    /// 更新时间。
     pub updated_at: DateTimeWithTimeZone,
-    /// 删除时间。
     pub deleted_at: Option<DateTimeWithTimeZone>,
 }
 

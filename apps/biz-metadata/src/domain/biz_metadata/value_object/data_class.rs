@@ -3,14 +3,18 @@ use domain_core::prelude::{DomainError, ValueObject};
 /// 元数据的数据分类，描述值的语义类型。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DataClass {
-    /// 数值型，可聚合。
+    /// 普通属性字段。
+    Attribute,
+    /// 指标/度量字段（可聚合，通常需要 unit）。
     Metric,
-    /// 枚举/离散/标识/日期，用于筛选或分组。
-    Dimension,
-    /// 文本描述。
+    /// 长文本（检索/RAG）。
     Text,
-    /// 结构化分组/容器。
-    Group,
+    /// 对象结构/字段组。
+    Object,
+    /// 列表/多值结构。
+    Array,
+    /// 标识符字段（替代旧 is_identifier）。
+    Identifier,
 }
 
 impl DataClass {
@@ -22,10 +26,12 @@ impl DataClass {
     /// 返回标准字符串表示。
     pub fn as_str(&self) -> &'static str {
         match self {
+            DataClass::Attribute => "attribute",
             DataClass::Metric => "metric",
-            DataClass::Dimension => "dimension",
             DataClass::Text => "text",
-            DataClass::Group => "group",
+            DataClass::Object => "object",
+            DataClass::Array => "array",
+            DataClass::Identifier => "identifier",
         }
     }
 }
@@ -35,10 +41,12 @@ impl TryFrom<&str> for DataClass {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value.to_ascii_lowercase().as_str() {
+            "attribute" => Ok(DataClass::Attribute),
             "metric" => Ok(DataClass::Metric),
-            "dimension" => Ok(DataClass::Dimension),
             "text" => Ok(DataClass::Text),
-            "group" => Ok(DataClass::Group),
+            "object" => Ok(DataClass::Object),
+            "array" => Ok(DataClass::Array),
+            "identifier" => Ok(DataClass::Identifier),
             other => Err(DomainError::Validation {
                 message: format!("invalid data_class: {other}"),
             }),

@@ -7,36 +7,34 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "biz_metadata")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    /// 自增主键。
     pub id: i64,
-    #[sea_orm(unique)]
-    /// 全局唯一业务编码。
+    #[sea_orm(unique_key = "ux_biz_metadata_tenant_code_alive")]
+    pub tenant_id: String,
+    pub version: i32,
+    #[sea_orm(unique_key = "ux_biz_metadata_tenant_code_alive")]
     pub code: String,
-    /// 标准业务名称（中文）。
     pub name: String,
     #[sea_orm(column_type = "Text", nullable)]
-    /// 业务含义/口径描述。
     pub description: Option<String>,
-    /// 节点类型（entity/event/field/relation）。
-    pub meta_type: String,
-    /// 归属父节点 ID。
-    pub owner_id: Option<i64>,
-    /// 数据分类（metric/dimension/text/group）。
-    pub data_class: String,
-    /// 数据类型。
+    pub object_type: String,
+    pub parent_id: Option<i64>,
+    pub data_class: Option<String>,
     pub value_type: Option<String>,
-    /// 单位（仅 metric 时有效）。
     pub unit: Option<String>,
-    /// 是否为唯一标识符。
-    pub is_identifier: bool,
-    /// 生命周期状态。
     pub status: String,
-    /// 创建时间。
+    pub source: String,
     pub created_at: DateTimeWithTimeZone,
-    /// 更新时间。
     pub updated_at: DateTimeWithTimeZone,
-    /// 软删除时间。
     pub deleted_at: Option<DateTimeWithTimeZone>,
+    #[sea_orm(
+        self_ref,
+        relation_enum = "SelfRef",
+        from = "parent_id",
+        to = "id",
+        on_update = "NoAction",
+        on_delete = "SetNull"
+    )]
+    pub biz_metadata: HasOne<Entity>,
 }
 
 impl ActiveModelBehavior for ActiveModel {}

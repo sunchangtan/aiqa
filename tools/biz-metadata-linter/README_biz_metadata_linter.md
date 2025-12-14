@@ -9,7 +9,7 @@
 
 该工具实现了规范中的核心门禁：
 - scope：object_type != feature 禁止填写 data_class/value_type/unit；feature 必填 data_class/value_type
-- types：value_type 语法（标量/Union/object/array）+ TypeRef（ref:<code>）
+- types：value_type 语法（标量/Union/object/array）+ TypeRef（ref:<code>）；Union 支持 TypeRef 作为 term（如 `ref:a | ref:b`）
 - identifier：value_type 仅允许 {string,int,int|string} + unit 为空 + code 命名匹配 *.id.<id_type>
 - unit：仅 metric 可填 unit
 - hierarchy：parent_code 存在且必须是 code 前缀
@@ -37,7 +37,7 @@
 | 命名 | Import/Publish | code 为点分 snake_case（如 company.base.name_cn） | A.3.2 | CODE_FORMAT | ✅ |
 | 唯一性 | Import/Publish | 同一批次 (tenant_id, code) 不重复 | B.3.3（DB UNIQUE 的输入侧补充） | UNIQUE_TENANT_CODE | ✅ |
 | Scope | Import/Publish | 非 feature 禁止填写 data_class/value_type/unit；feature 必填 data_class/value_type | A.一/2；第六章(1/2)；B.2.1 | SCOPE_NON_FEATURE_HAS_TYPE / SCOPE_FEATURE_MISSING_TYPE | ✅ |
-| value_type 语法 | Import/Publish | 允许：标量 / Union / json<object:S> / json<array:T> / ref:<code> | A.5；B.2.3 | TYPE_SYNTAX_INVALID | ✅ |
+| value_type 语法 | Import/Publish | 允许：标量 / Union / json<object:S> / json<array:T> / ref:<code>；Union 支持 `ref:<code>` term（允许 `|` 两侧空白） | A.5；B.2.3 | TYPE_SYNTAX_INVALID | ✅ |
 | TypeRef 解析 | Import/Publish | ref:<code> 目标存在、禁止循环、限制深度、解析后仍需符合 value_type 语法 | A.5.6；第六章(6)；B.2.3 | TYPE_REF_NOT_FOUND / TYPE_REF_CYCLE / TYPE_REF_TOO_DEEP / TYPE_REF_RESOLVED_INVALID | ✅ |
 | TypeRef 目标约束 | Import/Publish | ref 目标必须 object_type=feature 且 status=active | A.5.6；第六章(6) | TYPE_REF_TARGET_NOT_FEATURE / TYPE_REF_TARGET_NOT_ACTIVE | ✅ |
 | unit | Import/Publish | unit 仅 metric 可填；identifier 必须为空 | A.一/3；B.2.5；A.5.5 | UNIT_NOT_ALLOWED / IDENTIFIER_UNIT_NOT_EMPTY | ✅ |

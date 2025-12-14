@@ -7,7 +7,10 @@ use axum::{
 use crate::domain::biz_metadata::value_object::BizMetadataId;
 use crate::interface::http::{
     dto::{
-        request::{BizMetadataListParams, CreateBizMetadataRequest, UpdateBizMetadataRequest},
+        request::{
+            BizMetadataListParams, CreateBizMetadataRequest, DeleteBizMetadataParams,
+            UpdateBizMetadataRequest,
+        },
         response::{BizMetadataResponse, EmptyPayload, PageResultResponse, ResultResponse},
     },
     error::{ApiError, from_domain_err, not_found, to_api_error},
@@ -30,6 +33,7 @@ pub(crate) const BIZ_METADATA_CONTEXT: &str = "/biz_metadata";
     ),
     tag = "biz_metadata"
 )]
+/// 创建一条业务元数据定义（节点或特征），用于后续业务语义建模与检索。
 pub async fn create_biz_metadata(
     State(state): State<AppState>,
     Json(payload): Json<CreateBizMetadataRequest>,
@@ -77,6 +81,7 @@ pub async fn create_biz_metadata(
     ),
     tag = "biz_metadata"
 )]
+/// 基于版本号更新指定业务元数据的可变属性（乐观锁）。
 pub async fn update_biz_metadata(
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -108,6 +113,7 @@ pub async fn update_biz_metadata(
     ),
     tag = "biz_metadata"
 )]
+/// 按 ID 查询单条业务元数据定义。
 pub async fn get_biz_metadata(
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -128,7 +134,8 @@ pub async fn get_biz_metadata(
     context_path = BIZ_METADATA_CONTEXT,
     path = "/{id}",
     params(
-        ("id" = i64, Path, description = "BizMetadata ID")
+        ("id" = i64, Path, description = "BizMetadata ID"),
+        DeleteBizMetadataParams
     ),
     responses(
         (status = 204, description = "Deleted"),
@@ -137,13 +144,17 @@ pub async fn get_biz_metadata(
     ),
     tag = "biz_metadata"
 )]
+/// 基于版本号删除（软删）指定业务元数据定义。
 pub async fn delete_biz_metadata(
     State(state): State<AppState>,
     Path(id): Path<i64>,
+    Query(params): Query<DeleteBizMetadataParams>,
 ) -> Result<StatusCode, ApiError> {
+    let version = crate::domain::biz_metadata::value_object::Version::new(params.version)
+        .map_err(|e| to_api_error(HttpError::bad_request(e.to_string())))?;
     state
         .biz_metadata_service
-        .delete_biz_metadata(BizMetadataId::new(id))
+        .delete_biz_metadata(BizMetadataId::new(id), version)
         .await
         .map_err(from_domain_err)?;
     Ok(StatusCode::NO_CONTENT)
@@ -162,6 +173,7 @@ pub async fn delete_biz_metadata(
     ),
     tag = "biz_metadata"
 )]
+/// 分页查询业务元数据定义列表。
 pub async fn list_biz_metadata(
     State(state): State<AppState>,
     Query(params): Query<BizMetadataListParams>,

@@ -1,6 +1,6 @@
 use crate::domain::biz_metadata::value_object::{
-    BizMetadataCode, BizMetadataId, BizMetadataName, BizMetadataStatus, BizMetadataType, DataClass,
-    Unit, ValueType,
+    BizMetadataCode, BizMetadataId, BizMetadataName, BizMetadataStatus, DataClass, ObjectType,
+    Source, TenantId, Unit, ValueType, Version,
 };
 use chrono::{DateTime, Utc};
 use domain_core::prelude::{AggregateRoot, Audit, DomainError, Entity, validate_non_empty};
@@ -8,91 +8,119 @@ use domain_core::value_object::ValueObject;
 
 /// 元数据聚合根，表示系统中的一个元数据定义实体。
 ///
-/// # 示例
-/// 创建并更新元数据：
-/// ```
-/// use biz_metadata::{BizMetadata, BizMetadataType, DataClass, BizMetadataStatus, ValueType};
+/// 该聚合对齐 `biz_metadata` 表（规范 v1.0），并包含以下关键不变式：
+/// - `object_type != feature` 时，`data_class/value_type/unit` 必须为空
+/// - `object_type == feature` 时，`data_class/value_type` 必须非空
+/// - `unit` 仅允许在 `data_class=metric` 下填写
+/// - `data_class=identifier` 时，`unit` 必须为空（value_type 的严格集合由门禁工具与 DB CHECK 共同保障）
 ///
-/// # fn main() -> Result<(), domain_core::domain_error::DomainError> {
-/// let mut biz_metadata = BizMetadata::new(
-///     "company.finance.revenue",
-///     "营业收入",
-///     BizMetadataType::Attribute,
-///     DataClass::Metric,
-///     "decimal",
+/// # 示例
+/// ```
+/// use biz_metadata::{BizMetadata, DataClass, TenantId, ValueType};
+///
+/// let tenant = TenantId::new("default")?;
+/// let mut feature = BizMetadata::new_feature(
+///     tenant,
+///     "company.base.name_cn",
+///     "公司中文名",
+///     DataClass::Attribute,
+///     ValueType::new("string")?,
 /// )?;
-/// biz_metadata.change_value_type(ValueType::new("int")?)?;
-/// biz_metadata.change_status(BizMetadataStatus::Deprecated)?;
-/// assert_eq!(biz_metadata.data_class().as_str(), "metric");
-/// # Ok(()) }
+/// assert!(feature.data_class().is_some());
+/// # Ok::<(), domain_core::domain_error::DomainError>(())
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BizMetadata {
-    /// 元数据标识。
+    tenant_id: TenantId,
+    version: Version,
     id: BizMetadataId,
-    /// 元数据编码。
     code: BizMetadataCode,
-    /// 标准业务名称。
     name: BizMetadataName,
-    /// 业务含义/口径描述。
     description: Option<String>,
-    /// 元数据所属的大类（attribute/entity/event）。
-    metadata_type: BizMetadataType,
-    /// 数据分类，描述值的语义类型。
-    data_class: DataClass,
-    /// 单个值类型描述（包含基础、联合、自定义等）。
-    value_type: ValueType,
-    /// 单位（仅 metric 时生效）。
+    object_type: ObjectType,
+    parent_id: Option<BizMetadataId>,
+    data_class: Option<DataClass>,
+    value_type: Option<ValueType>,
     unit: Option<Unit>,
-    /// 归属父节点 ID。
-    owner_id: Option<BizMetadataId>,
-    /// 是否为唯一标识符。
-    is_identifier: bool,
-    /// 生命周期状态。
     status: BizMetadataStatus,
-    /// 时间线审计信息。
+    source: Source,
     audit: Audit,
 }
 
 /// 聚合的完整状态快照，用于持久化重建。
 #[derive(Debug, Clone)]
 pub struct MetadataSnapshot {
+    pub tenant_id: TenantId,
+    pub version: Version,
     pub id: BizMetadataId,
     pub code: String,
     pub name: String,
     pub description: Option<String>,
-    pub metadata_type: BizMetadataType,
-    pub owner_id: Option<BizMetadataId>,
-    pub data_class: DataClass,
-    pub value_type: String,
+    pub object_type: ObjectType,
+    pub parent_id: Option<BizMetadataId>,
+    pub data_class: Option<DataClass>,
+    pub value_type: Option<String>,
     pub unit: Option<Unit>,
-    pub is_identifier: bool,
     pub status: BizMetadataStatus,
+    pub source: Source,
     pub audit: Audit,
 }
 
 impl BizMetadata {
-    /// 构造一个新的元数据聚合，并执行基础校验。
-    pub fn new(
+    /// 构造一个新的非 feature 节点（entity/event/relation/document）。
+    pub fn new_node(
+        tenant_id: TenantId,
         code: impl Into<String>,
         name: impl Into<String>,
-        metadata_type: BizMetadataType,
-        data_class: DataClass,
-        value_type: impl Into<String>,
+        object_type: ObjectType,
     ) -> Result<Self, DomainError> {
+        if object_type == ObjectType::Feature {
+            return Err(DomainError::Validation {
+                message: "use new_feature() to create object_type=feature".into(),
+            });
+        }
         let now = Utc::now();
         Self::from_snapshot(MetadataSnapshot {
+            tenant_id,
+            version: Version::new(1)?,
             id: BizMetadataId::new(0),
             code: code.into(),
             name: name.into(),
             description: None,
-            metadata_type,
-            owner_id: None,
-            data_class,
-            value_type: value_type.into(),
+            object_type,
+            parent_id: None,
+            data_class: None,
+            value_type: None,
             unit: None,
-            is_identifier: false,
             status: BizMetadataStatus::Active,
+            source: Source::Manual,
+            audit: Audit::new(now),
+        })
+    }
+
+    /// 构造一个新的 feature 节点（字段/特征）。
+    pub fn new_feature(
+        tenant_id: TenantId,
+        code: impl Into<String>,
+        name: impl Into<String>,
+        data_class: DataClass,
+        value_type: ValueType,
+    ) -> Result<Self, DomainError> {
+        let now = Utc::now();
+        Self::from_snapshot(MetadataSnapshot {
+            tenant_id,
+            version: Version::new(1)?,
+            id: BizMetadataId::new(0),
+            code: code.into(),
+            name: name.into(),
+            description: None,
+            object_type: ObjectType::Feature,
+            parent_id: None,
+            data_class: Some(data_class),
+            value_type: Some(value_type.into_inner()),
+            unit: None,
+            status: BizMetadataStatus::Active,
+            source: Source::Manual,
             audit: Audit::new(now),
         })
     }
@@ -100,71 +128,177 @@ impl BizMetadata {
     /// 按字段与审计信息重建元数据聚合，保留时间戳与可选删除标记。
     pub fn from_snapshot(snapshot: MetadataSnapshot) -> Result<Self, DomainError> {
         let MetadataSnapshot {
+            tenant_id,
+            version,
             id,
             code,
             name,
             description,
-            metadata_type,
-            owner_id,
+            object_type,
+            parent_id,
             data_class,
             value_type,
             unit,
-            is_identifier,
             status,
+            source,
             audit,
         } = snapshot;
+
+        tenant_id.validate()?;
+        version.validate()?;
+        object_type.validate()?;
+        status.validate()?;
+        source.validate()?;
+
         let code = BizMetadataCode::new(code)?;
         let name = BizMetadataName::new(name)?;
-        let value_type = ValueType::new(value_type)?;
-        metadata_type.validate()?;
-        data_class.validate()?;
-        status.validate()?;
 
         if let Some(desc) = description.as_ref() {
             validate_non_empty(desc, "description")?;
         }
 
+        if let Some(v) = data_class.as_ref() {
+            v.validate()?;
+        }
+
+        let value_type = value_type.map(ValueType::new).transpose()?;
+
         if let Some(unit) = unit.as_ref() {
             unit.validate()?;
         }
 
+        Self::validate_scope(object_type, data_class, value_type.as_ref(), unit.as_ref())?;
+
         Ok(Self {
+            tenant_id,
+            version,
             id,
             code,
             name,
-            metadata_type,
             description,
-            owner_id,
+            object_type,
+            parent_id,
             data_class,
             value_type,
             unit,
-            is_identifier,
             status,
+            source,
             audit,
         })
     }
 
-    /// 返回元数据 ID。
+    fn validate_scope(
+        object_type: ObjectType,
+        data_class: Option<DataClass>,
+        value_type: Option<&ValueType>,
+        unit: Option<&Unit>,
+    ) -> Result<(), DomainError> {
+        match object_type {
+            ObjectType::Feature => {
+                if data_class.is_none() || value_type.is_none() {
+                    return Err(DomainError::Validation {
+                        message: "object_type=feature requires non-empty data_class and value_type"
+                            .into(),
+                    });
+                }
+            }
+            _ => {
+                if data_class.is_some() || value_type.is_some() || unit.is_some() {
+                    return Err(DomainError::Validation {
+                        message: "object_type!=feature must keep data_class/value_type/unit empty"
+                            .into(),
+                    });
+                }
+            }
+        }
+
+        if unit.is_some() && data_class != Some(DataClass::Metric) {
+            return Err(DomainError::Validation {
+                message: format!("unit not allowed when data_class is {data_class:?}"),
+            });
+        }
+
+        if data_class == Some(DataClass::Identifier) && unit.is_some() {
+            return Err(DomainError::Validation {
+                message: "identifier unit must be empty".into(),
+            });
+        }
+
+        Ok(())
+    }
+
+    pub fn tenant_id(&self) -> &TenantId {
+        &self.tenant_id
+    }
+
+    pub fn version(&self) -> Version {
+        self.version
+    }
+
     pub fn id(&self) -> BizMetadataId {
         self.id
     }
 
-    /// 获取元数据编码。
     pub fn code(&self) -> &BizMetadataCode {
         &self.code
     }
 
-    /// 获取当前元数据名称。
     pub fn name(&self) -> &BizMetadataName {
         &self.name
     }
 
-    /// 返回业务口径描述。
     pub fn description(&self) -> Option<&str> {
         self.description.as_deref()
     }
 
-    /// 更新元数据名称，写入前会重新校验。
+    pub fn object_type(&self) -> ObjectType {
+        self.object_type
+    }
+
+    pub fn parent_id(&self) -> Option<BizMetadataId> {
+        self.parent_id
+    }
+
+    pub fn data_class(&self) -> Option<DataClass> {
+        self.data_class
+    }
+
+    pub fn value_type(&self) -> Option<&ValueType> {
+        self.value_type.as_ref()
+    }
+
+    pub fn unit(&self) -> Option<&Unit> {
+        self.unit.as_ref()
+    }
+
+    pub fn is_identifier(&self) -> bool {
+        self.object_type == ObjectType::Feature && self.data_class == Some(DataClass::Identifier)
+    }
+
+    pub fn status(&self) -> BizMetadataStatus {
+        self.status
+    }
+
+    pub fn source(&self) -> Source {
+        self.source
+    }
+
+    pub fn created_at(&self) -> DateTime<Utc> {
+        self.audit.created_at()
+    }
+
+    pub fn updated_at(&self) -> DateTime<Utc> {
+        self.audit.updated_at()
+    }
+
+    pub fn delete_at(&self) -> Option<DateTime<Utc>> {
+        self.audit.delete_at()
+    }
+
+    pub fn is_deleted(&self) -> bool {
+        self.audit.is_deleted()
+    }
+
     pub fn rename(&mut self, name: BizMetadataName) -> Result<(), DomainError> {
         name.validate()?;
         self.name = name;
@@ -172,7 +306,6 @@ impl BizMetadata {
         Ok(())
     }
 
-    /// 设置业务口径描述，空白字符串将被拒绝。
     pub fn set_description(&mut self, description: Option<String>) -> Result<(), DomainError> {
         if let Some(desc) = description.as_ref() {
             validate_non_empty(desc, "description")?;
@@ -181,96 +314,66 @@ impl BizMetadata {
         self.bump_updated_at(Utc::now())
     }
 
-    /// 返回元数据所属类别。
-    pub fn metadata_type(&self) -> BizMetadataType {
-        self.metadata_type
+    pub fn set_parent_id(&mut self, parent_id: Option<BizMetadataId>) -> Result<(), DomainError> {
+        self.parent_id = parent_id;
+        self.bump_updated_at(Utc::now())
     }
 
-    /// 修改元数据所属类别。
-    /// 为保持领域语义清晰，使用语义化命名而非通用的 `set_` 前缀。
-    pub fn change_metadata_type(
-        &mut self,
-        metadata_type: BizMetadataType,
-    ) -> Result<(), DomainError> {
-        metadata_type.validate()?;
-        self.metadata_type = metadata_type;
-        self.bump_updated_at(Utc::now())?;
-        Ok(())
-    }
-
-    /// 返回数据分类。
-    pub fn data_class(&self) -> DataClass {
-        self.data_class
-    }
-
-    /// 修改数据分类。
     pub fn change_data_class(&mut self, data_class: DataClass) -> Result<(), DomainError> {
+        if self.object_type != ObjectType::Feature {
+            return Err(DomainError::Validation {
+                message: "non-feature node cannot set data_class".into(),
+            });
+        }
         data_class.validate()?;
-        self.data_class = data_class;
+        Self::validate_scope(
+            self.object_type,
+            Some(data_class),
+            self.value_type.as_ref(),
+            self.unit.as_ref(),
+        )?;
+        self.data_class = Some(data_class);
         self.bump_updated_at(Utc::now())?;
         Ok(())
     }
 
-    /// 返回当前值类型。
-    pub fn value_type(&self) -> &ValueType {
-        &self.value_type
-    }
-
-    /// 更新值类型定义。
     pub fn change_value_type(&mut self, value_type: ValueType) -> Result<(), DomainError> {
+        if self.object_type != ObjectType::Feature {
+            return Err(DomainError::Validation {
+                message: "non-feature node cannot set value_type".into(),
+            });
+        }
         value_type.validate()?;
-        self.value_type = value_type;
+        Self::validate_scope(
+            self.object_type,
+            self.data_class,
+            Some(&value_type),
+            self.unit.as_ref(),
+        )?;
+        self.value_type = Some(value_type);
         self.bump_updated_at(Utc::now())?;
         Ok(())
     }
 
-    /// 返回单位。
-    pub fn unit(&self) -> Option<&Unit> {
-        self.unit.as_ref()
-    }
-
-    /// 更新单位，空白字符串将被拒绝。
     pub fn set_unit(&mut self, unit: Option<Unit>) -> Result<(), DomainError> {
+        if self.object_type != ObjectType::Feature {
+            return Err(DomainError::Validation {
+                message: "non-feature node cannot set unit".into(),
+            });
+        }
         if let Some(ref u) = unit {
             u.validate()?;
         }
+        Self::validate_scope(
+            self.object_type,
+            self.data_class,
+            self.value_type.as_ref(),
+            unit.as_ref(),
+        )?;
         self.unit = unit;
         self.bump_updated_at(Utc::now())
     }
 
-    /// 返回归属父节点 ID。
-    pub fn owner_id(&self) -> Option<BizMetadataId> {
-        self.owner_id
-    }
-
-    /// 设置归属父节点 ID。
-    pub fn set_owner_id(&mut self, owner_id: Option<BizMetadataId>) -> Result<(), DomainError> {
-        if let Some(id) = owner_id {
-            id.validate()?;
-            self.owner_id = Some(id);
-        } else {
-            self.owner_id = None;
-        }
-        self.bump_updated_at(Utc::now())
-    }
-
-    /// 是否为唯一标识符。
-    pub fn is_identifier(&self) -> bool {
-        self.is_identifier
-    }
-
-    /// 设置唯一标识符标记。
-    pub fn set_identifier(&mut self, is_identifier: bool) -> Result<(), DomainError> {
-        self.is_identifier = is_identifier;
-        self.bump_updated_at(Utc::now())
-    }
-
-    /// 返回生命周期状态。
-    pub fn status(&self) -> BizMetadataStatus {
-        self.status
-    }
-
-    /// 修改生命周期状态。
     pub fn change_status(&mut self, status: BizMetadataStatus) -> Result<(), DomainError> {
         status.validate()?;
         self.status = status;
@@ -278,32 +381,16 @@ impl BizMetadata {
         Ok(())
     }
 
-    /// 返回创建时间（UTC）。
-    pub fn created_at(&self) -> DateTime<Utc> {
-        self.audit.created_at()
+    pub fn change_source(&mut self, source: Source) -> Result<(), DomainError> {
+        source.validate()?;
+        self.source = source;
+        self.bump_updated_at(Utc::now())
     }
 
-    /// 返回最近一次更新时间（UTC）。
-    pub fn updated_at(&self) -> DateTime<Utc> {
-        self.audit.updated_at()
-    }
-
-    /// 返回软删除时间，没有删除则为 `None`。
-    pub fn delete_at(&self) -> Option<DateTime<Utc>> {
-        self.audit.delete_at()
-    }
-
-    /// 判断当前是否已经软删除。
-    pub fn is_deleted(&self) -> bool {
-        self.audit.is_deleted()
-    }
-
-    /// 设置软删除时间，要求晚于 `updated_at`。
     pub fn mark_deleted(&mut self, delete_at: DateTime<Utc>) -> Result<(), DomainError> {
         self.audit.mark_deleted(delete_at)
     }
 
-    /// 内部通用的更新时间写入逻辑，保证不回退。
     fn bump_updated_at(&mut self, updated_at: DateTime<Utc>) -> Result<(), DomainError> {
         self.audit.bump_updated(updated_at)
     }
@@ -316,40 +403,40 @@ impl Entity for BizMetadata {
         self.id
     }
 }
+
 impl AggregateRoot for BizMetadata {}
 
 #[cfg(test)]
 mod tests {
-    use chrono::Duration;
-
     use super::*;
+    use chrono::Duration;
 
     #[test]
     fn constructs_metadata_with_valid_inputs() {
-        let biz_metadata = BizMetadata::new(
+        let biz_metadata = BizMetadata::new_feature(
+            TenantId::new("default").unwrap(),
             "code",
             "name",
-            BizMetadataType::Attribute,
-            DataClass::Dimension,
-            "string",
+            DataClass::Attribute,
+            ValueType::new("string").unwrap(),
         )
         .expect("valid biz_metadata");
 
         assert_eq!(biz_metadata.code().as_str(), "code");
         assert_eq!(biz_metadata.name().as_str(), "name");
-        assert_eq!(biz_metadata.value_type().as_str(), "string");
-        assert_eq!(biz_metadata.data_class().as_str(), "dimension");
+        assert_eq!(biz_metadata.value_type().unwrap().as_str(), "string");
+        assert_eq!(biz_metadata.data_class().unwrap().as_str(), "attribute");
         assert!(!biz_metadata.is_deleted());
     }
 
     #[test]
     fn rejects_empty_code() {
-        let err = BizMetadata::new(
+        let err = BizMetadata::new_feature(
+            TenantId::new("default").unwrap(),
             "",
             "name",
-            BizMetadataType::Attribute,
-            DataClass::Dimension,
-            "string",
+            DataClass::Attribute,
+            ValueType::new("string").unwrap(),
         )
         .unwrap_err();
 
@@ -358,12 +445,12 @@ mod tests {
 
     #[test]
     fn prevents_backward_delete_timestamp() {
-        let mut biz_metadata = BizMetadata::new(
+        let mut biz_metadata = BizMetadata::new_feature(
+            TenantId::new("default").unwrap(),
             "code",
             "name",
-            BizMetadataType::Attribute,
-            DataClass::Dimension,
-            "string",
+            DataClass::Attribute,
+            ValueType::new("string").unwrap(),
         )
         .unwrap();
 

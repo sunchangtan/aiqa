@@ -11,7 +11,7 @@ pub use application::service::biz_metadata_alias::{
 pub use domain::biz_metadata::BizMetadata;
 pub use domain::biz_metadata::repository::BizMetadataRepository;
 pub use domain::biz_metadata::value_object::{
-    BizMetadataId, BizMetadataStatus, BizMetadataType, DataClass, ValueType,
+    BizMetadataId, BizMetadataStatus, DataClass, ObjectType, Source, TenantId, ValueType, Version,
 };
 pub use domain::biz_metadata_alias::{
     AliasSource, AliasText, AliasWeight, BizMetadataAlias, BizMetadataAliasId,

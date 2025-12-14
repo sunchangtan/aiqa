@@ -32,6 +32,7 @@ pub(crate) const BIZ_METADATA_ALIAS_CONTEXT: &str = "/biz_metadata_alias";
     ),
     tag = "biz_metadata_alias"
 )]
+/// 创建业务元数据别名，用于多语言/多口径映射与检索友好性。
 pub async fn create_biz_metadata_alias(
     State(state): State<AppState>,
     Json(payload): Json<CreateBizMetadataAliasRequest>,
@@ -78,6 +79,7 @@ pub async fn create_biz_metadata_alias(
     ),
     tag = "biz_metadata_alias"
 )]
+/// 基于版本号更新指定别名的可变属性（乐观锁）。
 pub async fn update_biz_metadata_alias(
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -109,6 +111,7 @@ pub async fn update_biz_metadata_alias(
     ),
     tag = "biz_metadata_alias"
 )]
+/// 按 ID 查询单条业务元数据别名。
 pub async fn get_biz_metadata_alias(
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -138,6 +141,7 @@ pub async fn get_biz_metadata_alias(
     ),
     tag = "biz_metadata_alias"
 )]
+/// 删除指定业务元数据别名。
 pub async fn delete_biz_metadata_alias(
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -163,6 +167,7 @@ pub async fn delete_biz_metadata_alias(
     ),
     tag = "biz_metadata_alias"
 )]
+/// 分页查询业务元数据别名列表。
 pub async fn list_biz_metadata_alias(
     State(state): State<AppState>,
     Query(params): Query<BizMetadataAliasListParams>,

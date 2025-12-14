@@ -74,7 +74,7 @@ class Violation:
 
     - severity: 严重级别（ERROR/WARN）
     - rule_id: 稳定的规则标识（便于在 CI/门禁系统中做聚合统计）
-    - message: 面向人类的解释，尽量包含“为何不合规/如何修复”的信息
+    - message: 面向人类的解释，尽量包含“为何不合规、如何修复”的信息
     """
 
     severity: str  # ERROR | WARN
@@ -109,12 +109,17 @@ IDENTIFIER_ALLOWED = {"string", "int", "int|string"}
 
 # code 规范：dot-separated snake_case（示例：company.base.name_cn）
 RE_CODE = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$")
-# Union：使用 `|` 且不带空格（示例：int|string，company|person）
-RE_UNION = re.compile(r"^[a-z][a-z0-9_]*(\|[a-z][a-z0-9_]*)+$")
+# Union：使用 `|`（允许两侧出现空白字符，例如 "int | string"）
+RE_UNION = re.compile(r"^[a-z][a-z0-9_]*(\s*\|\s*[a-z][a-z0-9_]*)+$")
 # object：json<object:S>（S 为 schema_ref/命名空间，例如 company.base）
 RE_OBJECT = re.compile(r"^json<object:([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*)>$")
-# array：json<array:T>（T 为标量/实体/Union/object，详见规范 A.5.4）
-RE_ARRAY = re.compile(r"^json<array:([a-z][a-z0-9_]*(\|[a-z][a-z0-9_]*)+|[a-z][a-z0-9_]*|object)>$")
+# array：json<array:T>（T 为标量/实体/Union/object，详见规范 A.5.4；Union 允许空白）
+RE_ARRAY = re.compile(
+    r"^json<array:([a-z][a-z0-9_]*(\s*\|\s*[a-z][a-z0-9_]*)+|[a-z][a-z0-9_]*|object)>$"
+)
+
+# 单个“实体类型名”/“类型标记”（不含 dot），用于 Union / array element 校验。
+RE_TYPE_ATOM = re.compile(r"^[a-z][a-z0-9_]*$")
 # TypeRef：ref:<code>（规范 A.5.6）
 RE_TYPEREF = re.compile(r"^ref:([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*)$")
 
@@ -311,18 +316,27 @@ class TypeResolver:
         self.rows_by_tenant_code = rows_by_tenant_code
         self.max_depth = max_depth
 
-    def resolve(self, tenant_id: str, value_type: str) -> Tuple[Optional[ResolvedType], Optional[Violation]]:
-        """解析 value_type。
+    @staticmethod
+    def split_union_terms(expr: str) -> Optional[List[str]]:
+        """将 Union 表达式拆分为 term 列表（允许 `|` 两侧存在空白）。"""
+        if "|" not in expr:
+            return None
+        parts = [p.strip() for p in expr.split("|")]
+        if any(p == "" for p in parts):
+            return None
+        return parts
 
-        返回：
-        - (ResolvedType, None): 解析成功（含“非 ref”的直接返回）
-        - (None, Violation): 解析失败（目标不存在、循环、超深度等）
-        - (None, None): value_type 为空，交由上游 scope/required 规则处理
-        """
+    @staticmethod
+    def canonical_union(expr: str) -> str:
+        """对 Union 做“仅内部规范化”（不作为强制格式约束）。"""
+        terms = TypeResolver.split_union_terms(expr)
+        return expr if terms is None else "|".join(terms)
+
+    def _resolve_single_ref(
+        self, tenant_id: str, value_type: str
+    ) -> Tuple[Optional[ResolvedType], Optional[Violation]]:
+        """解析单个 TypeRef（value_type 必须是 `ref:<code>`）。"""
         vt = value_type.strip()
-        if vt == "":
-            return None, None
-
         m = RE_TYPEREF.match(vt)
         if not m:
             return ResolvedType(raw=vt, resolved=vt, canonical_code="", chain=()), None
@@ -409,6 +423,76 @@ class TypeResolver:
 
             return ResolvedType(raw=vt, resolved=inner, canonical_code=row.code, chain=tuple(seen)), None
 
+        raise AssertionError("unreachable")
+
+    def resolve(self, tenant_id: str, value_type: str) -> Tuple[Optional[ResolvedType], Optional[Violation]]:
+        """解析 value_type。
+
+        返回：
+        - (ResolvedType, None): 解析成功（含“非 ref”的直接返回）
+        - (None, Violation): 解析失败（目标不存在、循环、超深度等）
+        - (None, None): value_type 为空，交由上游 scope/required 规则处理
+        """
+        vt = value_type.strip()
+        if vt == "":
+            return None, None
+
+        # 1) 单个 TypeRef：ref:<code>
+        if RE_TYPEREF.match(vt):
+            return self._resolve_single_ref(tenant_id, vt)
+
+        # 2) Union of TypeRef / scalar / entity：ref:a | ref:b
+        union_terms = TypeResolver.split_union_terms(vt)
+        if union_terms is not None:
+            resolved_terms: List[str] = []
+            for term in union_terms:
+                if RE_TYPEREF.match(term):
+                    resolved, vio = self._resolve_single_ref(tenant_id, term)
+                    if vio:
+                        # 创建新的 Violation 对象，使用原始的 vt
+                        return None, Violation(
+                            severity=vio.severity,
+                            rule_id=vio.rule_id,
+                            message=vio.message,
+                            tenant_id=vio.tenant_id,
+                            code=vio.code,
+                            field=vio.field,
+                            value=vt,
+                        )
+                    assert resolved is not None
+                    resolved_terms.append(resolved.resolved.strip())
+                else:
+                    resolved_terms.append(term)
+
+            flattened: List[str] = []
+            for term in resolved_terms:
+                inner_terms = TypeResolver.split_union_terms(term)
+                if inner_terms is None:
+                    flattened.append(term.strip())
+                else:
+                    flattened.extend([t.strip() for t in inner_terms])
+
+            # 去重（保序）：避免解析后出现 "string|string" 影响后续规则判断。
+            deduped: List[str] = []
+            seen_terms: Set[str] = set()
+            for t in flattened:
+                t = t.strip()
+                if t == "" or t in seen_terms:
+                    continue
+                seen_terms.add(t)
+                deduped.append(t)
+
+            resolved_expr = "|".join(deduped)
+            return ResolvedType(
+                raw=vt,
+                resolved=TypeResolver.canonical_union(resolved_expr),
+                canonical_code="",
+                chain=(),
+            ), None
+
+        # 3) 其他表达：保持原样，但对顶层 Union 做内部规范化（不作为强制格式）
+        return ResolvedType(raw=vt, resolved=TypeResolver.canonical_union(vt), canonical_code="", chain=()), None
+
 
 def is_valid_value_type_expr(vt: str) -> bool:
     """判断 value_type 表达式语法是否符合规范（不做语义完整性校验）。
@@ -417,17 +501,33 @@ def is_valid_value_type_expr(vt: str) -> bool:
     - 标量 / Union / object / array / TypeRef
     - 注意：此处仅做语法层面判断；TypeRef 的存在性/循环/深度由 `TypeResolver` 处理。
     """
-    if vt in SCALAR_TYPES:
+    vt = vt.strip()
+    vt_canon = TypeResolver.canonical_union(vt)
+
+    if vt_canon in SCALAR_TYPES:
         return True
-    if vt in IDENTIFIER_ALLOWED:
-        return True
-    if RE_UNION.match(vt):
+    if vt_canon in IDENTIFIER_ALLOWED:
         return True
     if RE_OBJECT.match(vt):
         return True
     if RE_ARRAY.match(vt):
         return True
     if RE_TYPEREF.match(vt):
+        return True
+    # Union：支持 term 为 scalar / entity(atom) / TypeRef，允许空白
+    if "|" in vt:
+        terms = TypeResolver.split_union_terms(vt)
+        if terms is None:
+            return False
+        for term in terms:
+            t = term.strip()
+            if t in SCALAR_TYPES:
+                continue
+            if RE_TYPE_ATOM.match(t):
+                continue
+            if RE_TYPEREF.match(t):
+                continue
+            return False
         return True
     return False
 
@@ -620,6 +720,20 @@ class BizMetadataLinter:
                 out.append(Violation(vio.severity, vio.rule_id, vio.message, r.tenant_id, r.code, "value_type", r.value_type))
                 continue
             resolved_vt = resolved.resolved if resolved else r.value_type
+            resolved_vt = TypeResolver.canonical_union(resolved_vt.strip())
+            # identifier 的允许集合对 Union 不区分顺序，统一做一次规范化：
+            # - "string|string" -> "string"
+            # - "string|int" / "int|string" -> "int|string"
+            union_terms = TypeResolver.split_union_terms(resolved_vt)
+            if union_terms is not None:
+                term_set = {t.strip() for t in union_terms}
+                if term_set.issubset({"int", "string"}) and term_set:
+                    if term_set == {"int", "string"}:
+                        resolved_vt = "int|string"
+                    elif term_set == {"int"}:
+                        resolved_vt = "int"
+                    elif term_set == {"string"}:
+                        resolved_vt = "string"
 
             if resolved_vt not in IDENTIFIER_ALLOWED:
                 out.append(Violation("ERROR", "IDENTIFIER_VALUE_TYPE",

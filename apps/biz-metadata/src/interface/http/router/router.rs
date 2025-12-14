@@ -8,7 +8,7 @@ use crate::interface::http::state::AppState;
 use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
 
-// build.rs 生成的 OpenAPI 定义。
+// Include build.rs 生成的 OpenAPI 定义。
 include!(concat!(env!("OUT_DIR"), "/api_doc.rs"));
 
 /// 构建带 Swagger UI 的路由，包含元数据与别名接口。
